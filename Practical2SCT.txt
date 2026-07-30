@@ -1,0 +1,129 @@
+#P2 a) Write a Python program to: Define the binary sigmoid function. Generate input values from -10 toimport numpy as np
+import matplotlib.pyplot as plt
+def binary_sigmoid(x):
+    return 1/(1+ np.exp(x))
+x = np.linspace(-10,10,300)
+y = binary_sigmoid(x)
+print("Minimum Output=",np.min(y))
+print("Maximum Output", np.max(y))
+plt.figure(figsize=(5,3))
+plt.plot(x,y,linewidth=2)
+plt.title("Binary Sigmoid function")
+plt.ylabel("Input")
+plt.ylabel("output")
+plt.grid(True)
+plt.show()
+# Minimum Output= 4.5397868702434395e-05
+# Maximum Output= 0.9999546021312976
+
+
+#P2 b) Implement the bipolar sigmoid function and compare its output range with the binary sigmoid.import numpy as np
+import matplotlib.pyplot as plt
+def bipolar_sigmoid(x):
+    return (2/(1+ np.exp(-x)))-1
+x= np.linspace(-10,10,300)
+y= bipolar_sigmoid(x)
+print("Minimum Output=", np.min(y))
+print("Maximum Output=", np.max(y))
+plt.figure(figsize=(5,3))
+plt.plot(x,y,color=('red'))
+plt.title("Binary Sigmoid function")
+plt.ylabel("Input")
+plt.ylabel("output")
+plt.grid(True)
+plt.show()
+# Minimum Output= -0.9999092042625951
+# Maximum Output= 0.9999092042625952
+
+
+# P2 c) Write a program to calculate the derivative of the binary sigmoid and plot it..import numpy as np
+import matplotlib.pyplot as plt
+def binary_sigmoid(x):
+    return 1/(1+ np.exp(-x))
+#derivative of binary sigmoid
+def sigmoid_derivative(x):
+    s=binary_sigmoid(x)
+    return s*(1 - s)
+#Generate input values
+x= np.linspace(-10,10,300)
+#Calculate derivative
+y = sigmoid_derivative(x)
+#Print minimum and maximum derivative values
+print("Minimum Output=", np.min(y))
+print("Maximum Output=", np.max(y))
+#Plot derivative curve
+plt.figure(figsize=(6,3))
+plt.plot(x,y,color='blue',
+label='Sigmoid Derivative')
+plt.title("Derivative of Binary Sigmoid")
+plt.ylabel("Input")
+plt.ylabel("Derivative")
+plt.legend()
+plt.show()
+# Minimum Output= 4.53958077359076556-05
+# Maximum Output= 0.2499301032983703
+
+#P2 d) Write a program to calculate the derivative of the binary sigmoid and plot it.import numpy as np
+import matplotlib.pyplot as plt
+def sigmoid(x):
+    return 1/(1+ np.exp(-x))
+def derivative(x):
+    s = sigmoid(x)
+    return s* (1 - s)
+x = np.linspace(-8,8,300)
+plt.figure(figsize=(5,3))
+plt.plot(x, derivative(x))
+plt.title("derivative of binary Sigmoid function")
+plt.xlabel("Input")
+plt.ylabel("output")
+plt.grid(True)
+plt.show()
+
+
+#P2 e)Evaluate the sigmoid output for inputs from −100 to 100 and explain saturation.import numpy as np
+def sigmoid(x):
+    return 1/(1+ np.exp(-x))
+x = np.array([-100, -50, -20, -10, -5, 0, 5, 10, 20, 50, 100]) 
+y = sigmoid(x)
+for i, j in zip(x, y):
+    print(f"Input {1:5d} Output={j:.8f}")
+
+#P2 g) Generate random inputs and classify them using a sigmoid threshold of 0.5.import numpy as np 
+# Set seed for reproducible random numbers 
+np.random.seed(0) 
+# Define the sigmoid activation function (Fixed Latin characters)
+def sigmoid(x): 
+    return 1 / (1 + np.exp(-x)) 
+# Generate 20 random samples from a standard normal distribution 
+x = np.random.randn(20) 
+# Map raw inputs to probabilities between 0 and 1 
+prob = sigmoid(x) 
+# Convert probabilities to binary predictions (0 or 1) using a 0.5 threshold 
+predictions = (prob > 0.5).astype(int) 
+# Display outputs 
+print("Inputs:") 
+print(x) 
+print("\nProbabilities:") 
+print(prob) 
+print("\nPredictions:") 
+print(predictions)
+
+
+#P2 h) Compute mean, variance, minimum and maximum of binary and bipolar sigmoid outputs..import numpy as np
+def binary(x):
+    return 1/(1+ np.exp(-x))
+def bipolar(x):
+    return (2/(1+ np.exp(-x))) - 1
+x = np.linspace(-10, 10, 500)
+b = binary(x)
+bp = bipolar(x)
+print("Binary Sigmoid")
+print("Mean", np.mean(b))
+print("Variance", np.var(b))
+print("Minimum", np.min(b))
+print("Maximum-", np.max(b))
+print("\nBipolar Sigmoid")
+print("Mean", np.mean(bp))
+print("Variance", np.var(bp))
+print("Minimum-", np.min(bp))
+print("Maximum", np.max(bp))
