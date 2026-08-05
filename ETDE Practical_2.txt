@@ -1,0 +1,129 @@
+Practical 2
+1.Send a GET request to the REST API.
+2.Display the status code and response headers.
+3.Retrieve the JSON response.
+4.Display the first few records of the response.
+
+Code 1 – Setup
+import requests
+import pandas as pd
+
+Code 2 – Send GET Request
+url = "https://jsonplaceholder.typicode.com/posts"
+
+response = requests.get(url)
+
+print("Status Code:", response.status_code)
+print("\nHeaders:")
+print(response.headers)
+
+Code 3 – Retrieve JSON Response
+
+data = response.json()
+print(type(data))
+print("Total Records:", len(data))
+
+Code 4 – Display First Few Records
+for record in data[:5]:
+    print(record)
+
+Q.2Convert the API response into a DataFrame and perform data cleaning.
+
+Write Python code to:
+
+1.Convert the JSON response into a Pandas DataFrame.
+2.Inspect the dataset structure.
+3.Handle missing values and duplicate records.
+4.Standardize the required text fields.
+5.Create additional derived columns where necessary.
+
+Code 1 – Convert JSON to DataFrame
+
+df = pd.DataFrame(data)
+print(df.head())
+
+Code 2 – Inspect Dataset
+print(df.info())
+print(df.describe())
+print(df.shape)
+
+Code 3 – Missing Values & Duplicates
+print(df.isnull().sum())
+df = df.drop_duplicates()
+print(df.shape)
+
+Code 4 – Standardize Text Fields
+df["title"] = df["title"].str.title()
+df["body"] = df["body"].str.lower()
+print(df.head())
+
+Code 5 – Create Derived Column
+df["title_length"] = df["title"].str.len()
+print(df.head())
+
+Question 3
+
+Perform basic analysis on the ingested API data.
+
+Write Python code to:
+
+1.Merge the required datasets (if applicable).
+2.Calculate summary statistics.
+3.Analyze records by user/category.
+4.Display the results using tables and simple visualizations
+
+Code 1 – Merge Dataset
+users = requests.get("https://jsonplaceholder.typicode.com/users").json()
+users_df = pd.DataFrame(users)
+merged_df = pd.merge(df, users_df, left_on="userId", right_on="id")
+print(merged_df.head())
+
+Code 2 – Summary Statistics
+print(df.describe(include="all"))
+
+Code 3 – Analyze Records by User
+count = df.groupby("userId").size()
+print(count)
+
+Code 4 – Visualization
+import matplotlib.pyplot as plt
+count.plot(kind="bar")
+plt.title("Posts by User")
+plt.xlabel("User ID")
+plt.ylabel("Number of Posts")
+plt.show()
+
+Question 4
+
+Simulate real-time data streaming and prepare the Kafka environment.
+
+Write Python code to:
+
+1.Simulate streaming records one at a time using Python.
+2.Save the streamed records into a JSON Lines (.jsonl) file.
+3.Verify the Docker installation.
+4.Start the Kafka container using Docker.
+5.Verify that the Kafka container is running successfully.
+
+Code 1 – Simulate Streaming
+import time
+
+for record in data[:5]:
+    print(record)
+    time.sleep(1)
+
+Code 2 – Save JSONL File
+import json
+
+with open("stream.jsonl", "w") as file:
+    for record in data:
+        file.write(json.dumps(record))
+        file.write("\n")
+Code 3 – Verify Docker
+docker --version
+
+Code 4 – Start Kafka
+docker run -d --name kafka apache/kafka
+
+Code 5 – Verify Kafka
+docker ps

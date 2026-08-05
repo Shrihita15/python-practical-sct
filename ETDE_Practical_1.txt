@@ -1,0 +1,339 @@
+Part A: Dataset Exploration
+Load the provided dataset using Pandas.
+Display rows, columns, data types, missing values, and summary statistics.
+Dataset - customers.csv
+
+
+codes:
+
+!pip install pandas pyarrow fastavro openpyxl jupyter -q
+
+import pandas as pd
+#Load the dataset
+df =pd.read_csv("customers.csv")
+print("="*60)
+print("DATASET EXPLORATION")
+print("="*60)
+print("FIRST 10 RECORDS")
+print(df.head(10))
+
+print("LAST 10 RECORDS")
+print(df.tail(10))
+
+rows, cols = df.shape
+print("DATASET SHAPE")
+print("Number of Rows:",rows)
+print("Number of Columns:",cols)
+
+
+print("COLUMN NAMES")
+for col in df.columns:
+	print(col)
+
+
+print(df.types)
+
+
+print("DATASET INFORMATION")
+df.info()
+
+
+print("MISSING VALUES")
+missing = df.isnull().sum()
+print(missing)
+print("\nTotal Missing Values:", missing.sum())
+
+
+duplicates=df.duplicated().sum()
+print("\nDUPLICATE RECORDS")
+print(duplicates)
+
+print("\nNUMERICAL SUMMARY")
+print(df.describe())
+
+print("\nCOMPLETE SUMMARY")
+print(df.describe(include='all'))
+
+
+memory= df.memory_usage(deep=True).sum()
+print("MEMORY USAGE")
+print(round(memory/1024,2), "KB")
+
+
+print("UNIQUE VALUES")
+for col in ['Country', 'City', 'Company']:
+print(col,":", df[col].nunique())
+
+print("TOP 10 COUNTRIES")
+print(df["Country"].value_counts().head(10))
+
+print("TOP 10 CITIES")
+print(df['City').value_counts().head(10))
+
+
+
+df['Subscription Date'] = pd.to_datetime(df['Subscription Date'])
+print("SUBSCRIPTION DATE RANGE")
+print("Earliest Date:",
+df['Subscription Date'].min())
+print("Latest Date:",
+df['Subscription Date'].max())
+
+
+
+df['Domain'] = df['Email'].str.split('@').str[-1]
+print("TOP EMAIL DOMAINS")
+print(df['Domain'].value_counts().head(10))
+
+country_count = df.groupby('Country').size()
+print("\nCOUNTRY-WISE CUSTOMER COUNT")
+print(country_count.head(20))
+
+
+summary = pd. DataFrame({
+'Parameter': [
+'Total Records',
+'Total Columns',
+'Duplicate Records',
+'Total Missing Values'
+],
+'value': [
+rows,
+cols,
+duplicates,
+missing.sum()
+]
+})
+summary.to_csv(
+"dataset_profile_report.csv",
+index=False
+)
+print("Profile Report Generated successfully")
+
+
+Part B: Format Conversion
+• Convert the dataset into JSON, Parquet, ORC, and Avro formats.
+• Store generated files for comparison.
+
+import pandas as pd
+#Load dataset
+df = pd.read_csv("customers.csv")
+print("Dataset Loaded Successfully")
+print(df.shape)
+
+df.to_json(
+"customers.json",
+orient="records",
+indent=4)
+print("JSON file created successfully")
+
+df.to_parquet(
+"customers.parquet",
+index=False
+)
+print("Parquet file created successfully")
+
+df.to_orc(
+"customers.orc",
+index=False
+)
+print("ORC file created successfully")
+
+
+from fastavro import writer, parse_schema
+schema = {
+	"type": "record",
+	"name": "Customer",
+	"fields": [
+		{"name": "First Name", "type": "string"},
+		{"name": "Last Name", "type": "string"},
+		{"name": "Company", "type": "string"},
+		{"name": "Index", "type": "long"}, 
+		{"name": "Customer Id", "type": "string"}, 
+		{"name": "City", "type": "string"),
+		 {"name": "Phone 2", "type": "string"}, 
+		{"name": "Email", "type": "string"), 
+		{"name": "Subscription Date", "type": "string"},
+		{"name": "Country", "type": "string"},
+		{"name": "Phone 1", "type": "string"),
+		{"name": "website", "type": "string"}
+	]
+}
+parsed_schema = parse_schema(schema)
+records = df.to_dict(orient="records")
+with open("customers.avro", "wb") as out:
+	writer(out, parsed_schema, records)
+print("Avro file created successfully")
+
+
+Part C: Schema Analysis
+• Study schema support, metadata support, and schema evolution support
+
+
+import pandas as pd
+df= pd.read_csv("customers.csv")
+print("Schema Information")
+print(df.dtypes)
+#Convert Subscription Date to Proper Data Type
+df['Subscription Date'] = pd.to_datetime(
+df ['subscription Date']
+)
+print(df.dtypes)
+
+
+
+csv_df = pd.read_csv("customers.csv")
+print(csv_df.dtypes)
+
+json_df pd.read_json("customers.json")
+print(json_df.dtypes)
+
+parquet_df = pd.read_parquet("customers.parquet")
+print(parquet_df.dtypes)
+
+
+orc_df = pd.read_orc("customers.orc")
+print(orc_df.dtypes)
+
+
+
+import os
+print(os.path.getsize(
+"customers.csv"
+))
+
+
+import pyarrow.parquet as pq
+table = pq.read_table(
+"customers.parquet"
+)
+print(table.schema)
+
+
+Part D: Storage Comparison
+• Measure file sizes and compare storage efficiency. 
+
+
+import os
+files = ["customers.csv","customers.json", "customers.parquet", "customers.orc","customers.avro"] 
+print("File Size Comparison")
+for file in files:
+	size=os.path.getsize(file)/(1024*1024) 
+	print(f"{file}: {size:.2f}MB")
+
+
+import pandas as pd
+import os
+files = [
+"customers.csv",
+"customers.json",
+"customers.parquet",
+"customers.orc",
+"customers.avro
+]	
+storage_data = []
+for file in files:
+	size = round(os.path.getsize(file)/(1024*1024),2)
+	storage_data.append(
+	[file,size]
+	)
+storage_df=pd.DataFrame(
+	storage_data,
+	columns=["Format", "Size (MB)"]
+	)
+print(storage_df)
+
+
+
+import os
+csv_size = os.path.getsize(
+"customers.csv"
+)
+formats =[
+"customers.parquet",
+"customers.orc",
+"customers.avro",
+"customers.json"
+]
+for file in formats:
+	size= os.path.getsize(file) 
+	reduction ((csv_size-size)/csv_size)*100 
+	print(file,"Storage Reduction:", round(reduction, 2),"%")
+
+
+
+Part E: Performance Benchmarking
+Measure read time for each format and compare performance.
+
+**********note********
+BELOW CODE IS ONE WHOLE CODE
+
+import pandas as pd
+import time
+import json
+from fastavro import reader
+import matplotlib.pyplot as plt
+
+benchmark_results = []
+#CSV read time
+start=time.time()
+csv_df=pd.read_csv("customers.csv") 
+end=time.time()
+
+benchmark_results.append({
+"Format": "CSV", 
+"Read_Time_Seconds": round(end-start, 5), 
+"Rows_Read": csv_df.shape[e], 
+"Columns_Read": csv_df.shape[1]
+
+start =time.time() 
+json_df=pd.read_json("customers.json")
+end= time.time()
+
+benchmark_results.append({
+"Format": "JSON", 
+"Read_Time_Seconds": round(end-start, 5),
+ "Rows_Read": json_df.shape[0], 
+"Columns_Read": json_df.shape[1]
+})
+
+#Parquet read time
+ start=time.time()
+ parquet_df=pd.read_parquet("customers.parquet")
+end=time.time()
+
+benchmark_results.append({
+"Format": "Parquet",
+"Read_Time_Seconds": round(end -start, 5),
+"Rows_Read": parquet_df.shape[0],
+"Columns_Read": parquet_df.shape[1]
+})
+# ORC read time
+start=time.time()
+orc_df = pd.read_orc("customers.orc")
+end=time.time()
+
+benchmark_results.append({
+"Format": "ORC",
+"Read_Time_Seconds": round(end -start, 5),
+"Rows_Read": orc_df.shape[0],
+"Columns_Read": orc_df.shape[1]
+})
+
+#Avro read time
+start = time.time()
+with open("customers.avro", "rb") as file:
+	avro_records = list(reader(file))
+avro_df = pd.DataFrame(avro_records)
+end = time.time()
+benchmark_results.append({
+"Format": "Avro",
+"Read_Time_Seconds": round(end start, 5),
+"Rows_Read": avro_df.shape[0],
+"Columns_Read": avro_df.shape[1]
+})
+benchmark_df = pd.DataFrame (benchmark_results)
+print("READ PERFORMANCE BENCHMARK")
+print(benchmark_df)
+
+endddddddddddd
