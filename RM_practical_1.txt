@@ -1,0 +1,140 @@
+Q1. Load the Employee Salary dataset into Python using Pandas.
+
+import pandas as pd
+import numpy as np
+from math import ceil
+
+#LOAD THE DATASET
+ 
+data = pd.read_csv("employee_salary_dataset.csv ")
+ 
+print("Dataset Shape:",data.shape)
+print("Total Population:",len(data))
+
+Q2. Determine the required sample size using the 95% confidence level and 5% margin of error.
+
+#SAMPLE SIZE DETERMINATION
+N = len(data)     #Population Size 
+Z = 1.96   #Z-Score for 95% confidence 
+p = 0.5     #Expected variability 
+E = 0.05    #5% margin of error
+
+#Initial sample size
+ n0 = (Z**2 * p* (1-p)) /(E**2)
+
+#Adjusted sample size for finite population
+sample_size = n0 / (1 + ((n0 - 1) / N))
+#Round upward sample_size = ceil(sample_size)
+print("Required Sample Size:",sample_size)
+
+
+Q3. Perform the following sampling techniques: 
+Simple Random Sampling 
+Systematic Sampling 
+Stratified Sampling (based on Department) 
+Cluster Sampling (based on Job Level) 
+Convenience Sampling 
+Purposive Sampling (Salary > ₹80,000)
+
+#SIMPLE RANDOM SAMPLING
+ 
+random_sample = data.sample( n = sample_size, random_state = 2)
+ 
+print("Sample size:",len(random_sample))
+print(random_sample.head())
+
+#SYSTEMATIC SAMPLING
+ 
+interval = N//sample_size
+ 
+np.random.seed(42)
+start = np.random.randint(0,interval)
+ 
+systematic_sample = data.iloc[
+    start: interval
+].head(sample_size)
+ 
+print("Sample size:", len(systematic_sample))
+ 
+print(systematic_sample.head())
+
+#5. STRATIFIED SAMPLING USING GENDER
+stratified_parts = []
+ 
+for gender, group in data.groupby("Department"):
+    group_sample_size = round(len(group) / len(data) * sample_size)
+    selected_group = group.sample(n=group_sample_size, random_state=42)
+    stratified_parts.append(selected_group)
+ 
+stratified_sample = pd.concat(stratified_parts, ignore_index=True)
+ 
+print(stratified_sample.head())
+
+#6. Cluster Sampling
+ 
+clusters = data["Department"].dropna().unique()
+ 
+np.random.seed(42)
+selected_cluster = np.random.choice(clusters)
+ 
+cluster_sample = data[data["Department"] == selected_cluster]
+ 
+print("Selected cluster:", selected_cluster)
+print(cluster_sample.head())
+print("Number of employees in selected cluster:", len(cluster_sample))
+
+#7 CONVENIENCE SAMPLING
+convenience_sample = data.head(sample_size)
+convenience_sample
+
+#8. Purposive Sampling
+purposive_sample = data[data["Monthly_Salary"] >= 80000]
+purposive_sample
+
+Q4. Compare the sample sizes and average salary obtained from each sampling technique
+
+#Sample size and average salary comparison
+comparison = pd.DataFrame({ "Sampling Technique": [ "Complete Dataset", "Simple Random", "Systematic", "Stratified", "Cluster", "Convenience", "Purposive" ],
+"Number of Records": [
+    len(data),
+    len(random_sample),
+    len(systematic_sample),
+    len(stratified_sample),
+    len(cluster_sample),
+    len(convenience_sample),
+    len(purposive_sample)
+],
+
+"Average Salary": [
+    data["Monthly_Salary"].mean(),
+    random_sample["Monthly_Salary"].mean(),
+    systematic_sample["Monthly_Salary"].mean(),
+    stratified_sample["Monthly_Salary"].mean(),
+    cluster_sample["Monthly_Salary"].mean(),
+    convenience_sample["Monthly_Salary"].mean(),
+    purposive_sample["Monthly_Salary"].mean()
+]
+ 
+})
+comparison["Average Salary"] = comparison["Average Salary"].round(2)
+print("\nSampling Comparison:") 
+display(comparison)
+
+Q5. Calculate descriptive statistics (Mean, Median, Standard Deviation, Minimum, Maximum) for the Salary column. 
+
+#Statistical Data Analysis
+ 
+#Calculate descriptive statistics for Salary
+statistics = random_sample["Monthly_Salary"].describe()
+ 
+print("Statistical Summary of Salary")
+print(statistics)
+
+Q6. Save each sampled dataset into separate CSV files.
+
+Save each sampled dataset into separate CSV files
+random_sample.to_csv("simple_random_sample.csv", index=False) systematic_sample.to_csv("systematic_sample.csv", index=False) 
+stratified_sample.to_csv("stratified_sample.csv", index=False) 
+cluster_sample.to_csv("cluster_sample.csv", index=False) 
+convenience_sample.to_csv("convenience_sample.csv", index=False) purposive_sample.to_csv("purposive_sample.csv", index=False)
+print("All sampled datasets have been saved successfully.")
