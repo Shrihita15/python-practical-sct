@@ -1,0 +1,107 @@
+Use Employee Salary Dataset (Kaggle)
+
+1.Import the necessary Python libraries required for data analysis and visualization. 
+import pandas as pd
+import matplotlib.pyplot as plt
+
+2.Load the EmployeeSalary.csv dataset into a Pandas DataFrame. 
+#Load the data
+df = pd.read_csv('employee_salary_dataset .csv')
+
+3.Display the first five records of the dataset. 
+#Display the first five records
+df.head(5)
+
+4.Display the dimensions (number of rows and columns) of the dataset. 
+#Display the total rows and columns
+print("Dimension of data",df.shape)
+print("Rows:",df.shape[0])
+print("Columns:",df.shape[1])
+
+5.Display the names of all the columns. 
+#Display the names of all the columns
+print("Column Names")
+print(df.columns)
+
+6.Display complete information about the dataset, including data types and non-null values. 
+# Display complete dataset information
+print("Dataset Information:") df.info()
+
+
+7.Identify and display the number of missing values in each column. 
+#Display the number of missing values in each column
+print("Missing Values in Each Column:") print(df.isnull().sum())
+
+8.Generate descriptive statistics for all numerical columns. 
+#Generate descriptive statistics for all numerical columns
+print("Descriptive Statistics:") print(df.describe())
+
+9.Calculate the following statistical measures for the Salary column: 
+oMean 
+oMedian 
+oStandard Deviation 
+oVariance 
+oMinimum Salary 
+oMaximum Salary 
+
+#Calculate statistical measures for the monthly_salary column
+print("Monthly Salary Statistics:") 
+print("Mean:", df["Monthly_Salary"].mean()) 
+print("Median:", df["Monthly_Salary"].median())
+ print("Standard Deviation:", df["Monthly_Salary"].std()) 
+print("Variance:", df["Monthly_Salary"].var()) 
+print("Minimum Salary:", df["Monthly_Salary"].min()) 
+print("Maximum Salary:", df["Monthly_Salary"].max())
+
+10.Find the most frequently occurring Department in the dataset. 
+most_frequent_department = df["Department"].mode()[0]
+print("Most Frequently Occurring Department:", most_frequent_department)
+
+11.Compute the correlation matrix among all numerical attributes.
+correlation_matrix = df.corr(numeric_only=True)
+print("Correlation Matrix:") print(correlation_matrix)
+ 
+12.Display the frequency distribution of employees across different departments. 
+department_frequency = df["Department"].value_counts()
+print("Frequency Distribution of Employees Across Departments:") print(department_frequency)
+
+13.Calculate the average salary of employees department-wise. 
+# Calculate average monthly salary department-wise
+average_salary_by_department = df.groupby("Department")["Monthly_Salary"].mean()
+print("Average Salary by Department:") print(average_salary_by_department)
+
+14.Display the top five employees with the highest salaries. 
+# Display top five employees with highest salaries
+top_five_employees = df.sort_values( by="Monthly_Salary", ascending=False ).head(5)
+print("Top Five Employees with Highest Salaries:") print(top_five_employees)
+
+15.Display the details of employees whose salary is greater than ₹80,000. 
+# Filter employees with salary greater than ₹80,000
+high_salary_employees = df[df["Monthly_Salary"] > 80000]
+print("Employees with Monthly Salary Greater Than ₹80,000:") 
+print(high_salary_employees)
+
+16.Plot a Histogram to visualize the distribution of employee salaries. 
+#Plot histogram of employee salaries
+plt.figure(figsize=(8, 5)) plt.hist(df["Monthly_Salary"], bins=10, color="skyblue", edgecolor="black")
+plt.title("Distribution of Employee Salaries") 
+plt.xlabel("Monthly Salary")
+plt.ylabel("Number of Employees")
+
+17.Plot a Bar Chart showing the number of employees in each department. 
+#Count employees in each department
+
+department_count = df["Department"].value_counts()
+
+#Plot bar chart
+plt.figure(figsize=(8, 5)) plt.bar(department_count.index, department_count.values, color="skyblue", edgecolor="black")
+plt.title("Number of Employees in Each Department") plt.xlabel("Department") plt.ylabel("Number of Employees") plt.xticks(rotation=45)
+plt.show()
+
+18.Save the descriptive statistical summary into a CSV file named Statistics.csv. 
+#Generate descriptive statistics
+statistics_summary = df.describe()
+#Save the summary to Statistics.csv
+statistics_summary.to_csv("Statistics.csv")
+print("Descriptive statistical summary saved as Statistics.csv")
+
