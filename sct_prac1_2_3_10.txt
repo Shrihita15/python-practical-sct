@@ -1,0 +1,453 @@
+#PRACTICAL NO. : 1 
+a)Implement a single neuron with given inputs, weights, and bias using step activation
+import numpy as np
+#inputs
+X = np.array([1,2,3])
+#Weights
+W = np.array([0.4, 0.5, 0.6])
+#bias- without bias the neuron might not classify data correctly
+b= 0.2
+#weighted sum
+z= np.dot(X,W)+b
+# step activation
+Output = 1 if z>0 else 0
+print("Output:", Output)
+#output: 1
+
+
+#P1 b)Design a neuron using sigmoid activation and compute output.
+import numpy as np
+def sigmoid(x):
+    return 1/(1+np.exp(-x))
+X= np.array([2,1])
+W= np.array([0.3, 0.8])
+b = -0.5
+
+z= np.dot(X,W)+b
+Output = sigmoid(z)
+print("Sigmoid Output:", Output)
+#Sigmoid Output: 0.7109495026250039
+
+
+#P1 c) Implement forward propagation for 2-input neuron using ReLU.
+import numpy as np
+def relu(x):
+    return max(0,x)
+
+X= np.array([1.5, -2])
+W= np.array([0.7, 0.9])
+b= 0.1
+
+z= np.dot(X,W)+b
+
+Output = relu(z)
+print("ReLU Output:", Output)
+#ReLU Output: 0
+
+#P1 d)Compute outputs for multiple input samples using a neuron.
+import numpy as np
+X = np.array([[1,2],[3,4],[5,6]])
+W = np.array([0.2, 0.3])
+b - 0.5
+
+Z = np.dot(X,W)+b
+print("Output:", z)
+#Output: -0.6500000000000002
+
+#P1 e) Normalize input data and compute neuron output.
+import numpy as np
+X = np.array([10,20,30])
+X_norm = (X-np.mean(X))/np.std(X)
+
+W = np.array([0.5, 0.4, 0.3])
+b = 0.1
+
+Output = np.dot(X_norm,W)+b
+print("Normalized Output:", Output)
+Normalized Output: -0.1449489742783178
+
+#P1 f)Compare outputs with and without bias.import numpy as np
+
+X = np.array([1,2,3])
+W = np.array([0.2, 0.3, 0.4])
+Output_1 = np.dot(X,W)
+b= 1
+Output_2 = np.dot(X,W)+b
+
+print("Without bias: ", Output_1)
+print("With bias: ", Output_2)
+
+# Without bias:  2.0
+# With bias:  3.0
+
+
+#P1 g)Implement a neuron using tanh activation.
+import numpy as np
+
+def tanh(x):
+    return np. tanh(x)
+
+X = np.array([0.5, -1.5])
+W = np.array([0.6, 0.9])
+b= 0.2
+
+z= np.dot(X,W)+b
+Output = tanh(z)
+print("Tanh Output: ", Output)
+
+#P1 h )Build a simple 2-layer forward propagation manually.
+import numpy as np
+#Input
+X = np.array([1,2])
+#layer 1
+W1 = np.array([[0.5, 0.2], [0.3,0.8]])
+b1 = np.array([0.1, 0.2])
+#layer 2
+W2 = np.array([0.7, 0.6])
+b2 = 0.3
+#forward pass
+h = np.dot(X, W1)+ b1
+h = np.maximum(0,h) # ReLU
+Output = np.dot(h, W2) + b2
+print("Final Output:", Output)
+Final Output: 2.34
+
+
+PRACTICAL NO. 2
+#P2 a) Write a Python program to: Define the binary sigmoid function. Generate input values from -10 toimport numpy as np
+import matplotlib.pyplot as plt
+def binary_sigmoid(x):
+    return 1/(1+ np.exp(x))
+x = np.linspace(-10,10,300)
+y = binary_sigmoid(x)
+print("Minimum Output=",np.min(y))
+print("Maximum Output", np.max(y))
+plt.figure(figsize=(5,3))
+plt.plot(x,y,linewidth=2)
+plt.title("Binary Sigmoid function")
+plt.ylabel("Input")
+plt.ylabel("output")
+plt.grid(True)
+plt.show()
+# Minimum Output= 4.5397868702434395e-05
+# Maximum Output= 0.9999546021312976
+
+
+#P2 b) Implement the bipolar sigmoid function and compare its output range with the binary sigmoid.import numpy as np
+import matplotlib.pyplot as plt
+def bipolar_sigmoid(x):
+    return (2/(1+ np.exp(-x)))-1
+x= np.linspace(-10,10,300)
+y= bipolar_sigmoid(x)
+print("Minimum Output=", np.min(y))
+print("Maximum Output=", np.max(y))
+plt.figure(figsize=(5,3))
+plt.plot(x,y,color=('red'))
+plt.title("Binary Sigmoid function")
+plt.ylabel("Input")
+plt.ylabel("output")
+plt.grid(True)
+plt.show()
+# Minimum Output= -0.9999092042625951
+# Maximum Output= 0.9999092042625952
+
+
+# P2 c) Write a program to calculate the derivative of the binary sigmoid and plot it..import numpy as np
+import matplotlib.pyplot as plt
+def binary_sigmoid(x):
+    return 1/(1+ np.exp(-x))
+#derivative of binary sigmoid
+def sigmoid_derivative(x):
+    s=binary_sigmoid(x)
+    return s*(1 - s)
+#Generate input values
+x= np.linspace(-10,10,300)
+#Calculate derivative
+y = sigmoid_derivative(x)
+#Print minimum and maximum derivative values
+print("Minimum Output=", np.min(y))
+print("Maximum Output=", np.max(y))
+#Plot derivative curve
+plt.figure(figsize=(6,3))
+plt.plot(x,y,color='blue',
+label='Sigmoid Derivative')
+plt.title("Derivative of Binary Sigmoid")
+plt.ylabel("Input")
+plt.ylabel("Derivative")
+plt.legend()
+plt.show()
+# Minimum Output= 4.53958077359076556-05
+# Maximum Output= 0.2499301032983703
+
+#P2 d) Write a program to calculate the derivative of the binary sigmoid and plot it.import numpy as np
+import matplotlib.pyplot as plt
+def sigmoid(x):
+    return 1/(1+ np.exp(-x))
+def derivative(x):
+    s = sigmoid(x)
+    return s* (1 - s)
+x = np.linspace(-8,8,300)
+plt.figure(figsize=(5,3))
+plt.plot(x, derivative(x))
+plt.title("derivative of binary Sigmoid function")
+plt.xlabel("Input")
+plt.ylabel("output")
+plt.grid(True)
+plt.show()
+
+
+#P2 e)Evaluate the sigmoid output for inputs from −100 to 100 and explain saturation.import numpy as np
+def sigmoid(x):
+    return 1/(1+ np.exp(-x))
+x = np.array([-100, -50, -20, -10, -5, 0, 5, 10, 20, 50, 100]) 
+y = sigmoid(x)
+for i, j in zip(x, y):
+    print(f"Input {1:5d} Output={j:.8f}")
+
+#P2 g) Generate random inputs and classify them using a sigmoid threshold of 0.5.import numpy as np 
+# Set seed for reproducible random numbers 
+np.random.seed(0) 
+# Define the sigmoid activation function (Fixed Latin characters)
+def sigmoid(x): 
+    return 1 / (1 + np.exp(-x)) 
+# Generate 20 random samples from a standard normal distribution 
+x = np.random.randn(20) 
+# Map raw inputs to probabilities between 0 and 1 
+prob = sigmoid(x) 
+# Convert probabilities to binary predictions (0 or 1) using a 0.5 threshold 
+predictions = (prob > 0.5).astype(int) 
+# Display outputs 
+print("Inputs:") 
+print(x) 
+print("\nProbabilities:") 
+print(prob) 
+print("\nPredictions:") 
+print(predictions)
+
+
+#P2 h) Compute mean, variance, minimum and maximum of binary and bipolar sigmoid outputs..import numpy as np
+def binary(x):
+    return 1/(1+ np.exp(-x))
+def bipolar(x):
+    return (2/(1+ np.exp(-x))) - 1
+x = np.linspace(-10, 10, 500)
+b = binary(x)
+bp = bipolar(x)
+print("Binary Sigmoid")
+print("Mean", np.mean(b))
+print("Variance", np.var(b))
+print("Minimum", np.min(b))
+print("Maximum-", np.max(b))
+print("\nBipolar Sigmoid")
+print("Mean", np.mean(bp))
+print("Variance", np.var(bp))
+print("Minimum-", np.min(bp))
+print("Maximum", np.max(bp))
+
+
+PRACTICAL NO.3
+#a. Write a Python program to simulate the AND logic gate using the McCulloch-Pitts neuron model.
+
+Display the truth table.
+import pandas as pd 
+def mcp_neuron(inputs,weights,threshold): 
+    total = sum(i*w for i,w in zip(inputs,weights)) 
+    return 1 if total>= threshold else 0 
+    
+weights = [1,1] 
+threshold = 2 
+truth_table = [] 
+
+for x1 in [0,1]: 
+    for x2 in [0,1] : 
+        output = mcp_neuron([x1,x2],weights,threshold) 
+        truth_table.append([x1,x2,output]) 
+        
+df = pd.DataFrame(truth_table,columns=["Input1","Input2","AND Output"]) 
+print(df)
+
+#b. Simulate an OR gate using an MCP neuron with appropriate weights and threshold.
+import pandas as pd 
+def neuron(inputs,weights,threshold): 
+    return int(sum(i*w for i,w in zip(inputs,weights))>=threshold) 
+
+weights = [1,1] 
+threshold = 1 
+data =[] 
+
+for a in [0,1]: 
+    for b in [0,1]: 
+        data.append([a,b,neuron([a,b],weights,threshold)]) 
+        
+df = pd.DataFrame(data,columns=["A","B","OR"]) 
+print(df)
+
+#c. Implement the NOT gate using the MCP neuron
+import pandas as pd 
+def neuron(inputs,weights,threshold): 
+    return int(weight*x >= threshold) 
+    
+weight = -1 
+threshold = 0 
+table =[] 
+
+for x in [0,1]: 
+    output = neuron(x,weight,threshold) 
+    table.append([x,output]) 
+    
+df = pd.DataFrame(table,columns=["Input","NOT"]) 
+print(df)
+
+#d. Develop an MCP neuron that simulates the NAND gate.
+import pandas as pd 
+def neuron(inputs,weights,threshold): 
+    total = sum(i*w for i,w in zip(inputs,weights)) 
+    return int(total>=threshold) 
+
+weights = [-2,-2] 
+threshold = -3 
+table =[] 
+
+for a in [0,1]: 
+    for b in [0,1]: 
+        table.append([a,b,neuron([a,b],weights,threshold)]) 
+
+df = pd.DataFrame(table,columns=["A","B","NAND"]) 
+print(df)
+
+#e. Write a program to simulate the NOR gate using the MCP neuron model.
+import pandas as pd
+
+def neuron(inputs, weights, threshold):
+    total = sum(i * w for i, w in zip(inputs, weights))
+    return int(total >= threshold)
+
+weights = [-1, -1]
+threshold = 0
+table = []
+
+for a in [0, 1]:
+    for b in [0, 1]:
+        table.append([a, b, neuron([a, b], weights, threshold)])
+
+df = pd.DataFrame(table, columns=["A", "B", "NOR"])
+print(df)
+
+#Implement the XOR gate using a network of MCP neurons (AND, OR, NOT).
+import pandas as pd
+def AND(a, b):
+    return int(a + b >= 2)
+def OR(a, b):
+    return int(a + b >= 1)
+def NOT(x):
+    return int(-x >= 0)
+
+table = []
+
+for a in [0, 1]:
+    for b in [0, 1]:
+        or1 = OR(a, b)
+        and1 = AND(a, b)
+        not1 = NOT(and1)
+        xor = AND(or1, not1)
+        table.append([a, b, xor])
+
+df = pd.DataFrame(table, columns=["A", "B", "XOR"])
+print(df)
+
+#g. Study how different threshold values affect the output of an MCP neuron.
+weights = [1, 1]
+inputs = [[0, 0], [0, 1], [1, 0], [1, 1]]
+
+for threshold in [0, 1, 2, 3]:
+    print("\nThreshold=", threshold)
+    for x in inputs:
+        output = int(sum(i * w for i, w in zip(x, weights)) >= threshold)
+        print(x, "->", output)
+
+#h. Design an MCP neuron that produces output 1 only when both inputs are 1, otherwise 0. 
+Verify the truth table and explain why it behaves as an AND gate.
+
+import pandas as pd
+weights = [2, 2]
+threshold = 4
+table = []
+
+for x1 in [0, 1]:
+    for x2 in [0, 1]:
+        total = x1 * weights[0] + x2 * weights[1]
+        output = int(total >= threshold)
+        table.append([x1, x2, total, output])
+
+df = pd.DataFrame(table, columns=["Input1", "Input2", "Weighted Sum", "Output"])
+print(df)
+
+
+PRACTICAL 10
+Topic: Python Membership and Identity Operators
+
+Question 1. To study and implement Membership Operators (in and not in) in Python.
+
+CODE:
+students = ["Amit","Priya","Rahul","Sneha"]
+search_name = "Rahul"
+#Using in operator 
+if search_name in students:
+    print(search_name, "is present in the list")
+#Using not in operator
+new_name = "Rohan"
+if new_name not in students:
+    print(new_name,"is not present in the list")
+#Membership in a string
+email = "student@university.edu"
+print("@university.edu" in email)
+
+
+Question 2:  Create a dictionary containing student names as keys and their marks as values. Use membership operators to check whether a given student exists in the dictionary and whether a particular mark exists among the dictionary values.
+
+CODE:
+marks = {
+    "Amit": 78,
+    "Priya": 85,
+    "Rahul": 67,
+    "Sneha": 92,
+    "Neha": 74
+}
+name = input("Enter student name: ")
+mark = int(input("Enter mark to search: "))
+print("Student exists:", name in marks)
+print("Student does not exist:", name not in marks)
+print("Mark exists:", mark in marks.values())
+print("Mark does not exist:", mark not in marks.values())
+
+Question 3.  
+Create two lists containing the same elements and create a third variable referring to the first list.
+Use identity operators to determine which variables refer to the same object
+
+CODE:
+data1 = [10,20,30,40]
+data2 = [10,20,30,40]
+data3 = data1
+print("data1 is data2:", data1 is data2)
+print("data1 is data3:", data1 is data3)
+print("data2 is data3:", data2 is data3)
+print("data1 is not data2:",data1 is not data2)
+
+Question 4. Write a Python program to validate whether a student's selected programming language belongs to the list of supported languages.
+Also create another reference to the same list and verify its identity.                   
+
+CODE:
+languages = ["Python", "Java", "C++", "R", "JavaScript"] 
+selected_language = input("Enter your programming language: ")
+if selected_language in languages:
+    print(selected_language, "is a supported language.")
+else:
+    print(selected_language, "is not a supported language.")
+available_languages = languages
+print("Both variables refer to the same object:", 
+      languages is available_languages)
+print("Both variables refer to different objects:", 
+      languages is not available_languages)
+
+
+
