@@ -1,0 +1,668 @@
+PRACTICAL 5
+Question 1. Start PySpark 
+Start Docker Desktop. 
+Start the PySpark Jupyter container. 
+Open Jupyter Notebook in the browser. 
+Create a new notebook. 
+Create a SparkSession and display the Spark version. 
+
+#Open docker and search for - jupyter/pyspark-notebook then run that
+after running
+optional run option will come
+write the container name and write 2nd port value
+the run in google crome as
+http://localhost(port_no.) enter
+it will open token or password- paste from the container link afte token=()
+it will open jupyter
+
+##### IF THE JUPTER TOKEN LINK DONT OPEN
+IN WINDOW POWERSHELL RUN FOLLWING
+docker ps
+docker logs pyspark1(or any other name)
+docker exe pysparl1 jupyter server list
+#step5
+#Start PySpark and display the Spark version
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, avg, count
+
+spark = SparkSession.builder \
+    .appName("Housing price analysis") \
+    .getOrCreate()
+
+print("Spark session created successfully!")
+print("Spark version:", spark.version)
+
+
+Question 2. Load the Dataset 
+Load Housing.csv into a PySpark DataFrame. 
+Display the first 10 records. 
+Display the DataFrame schema. 
+Display the columns price, area, bedrooms, and bathrooms. 
+Then upload housing.csv file
+the run the below code
+code:
+##Load and explore the dataset
+
+# Load the dataset
+df = spark.read.csv("Housing.csv", header=True, inferSchema=True)
+
+# Display first 10 records
+df.show(10)
+
+# Display DataFrame schema
+df.printSchema()
+
+# Display selected columns
+df.select(
+    "price", "area", "bedrooms", "bathrooms"
+).show(10)
+
+Question 3. Analyze the Data 
+Display houses with a price greater than ₹10,000,000. 
+Display houses with air conditioning. 
+Display the 10 most expensive houses. 
+Calculate the average house price. 
+Group the data by furnishingstatus and calculate the number of houses and average price. 
+#
+##Analyze the data
+# a. Houses with price greater than 10,000,000
+df.filter(col("price") > 10000000).show()
+
+# b. Houses with air conditioning
+df.filter(col("airconditioning") == "yes").show()
+
+# c. Display 10 most expensive houses
+df.orderBy(col("price").desc()).show(10)
+
+# d. Calculate average house price
+df.select(
+    avg("price").alias("average_house_price")
+).show()
+
+# e. Group by furnishing status
+df.groupBy("furnishingstatus").agg(
+    count("*").alias("number_of_houses"),
+    avg("price").alias("average_price")
+).show()
+
+
+Question 4. Transform and Store 
+Create a column named price_per_area. 
+Filter houses with an area greater than 5000. 
+Select the required columns from the processed data. 
+Save the result in Parquet format. 
+Read the Parquet file and display the output. 
+
+#
+
+# 1. Create price_per_area
+df_with_price_per_area = df.withColumn("price_per_area",col("price")/col("area"))
+df_with_price_per_area.select("price","area","price_per_area").show(10)
+# 2 and 3. Filter area > 5000 and select the required columns
+result = (
+    df.filter(col("area")>5000)
+    .select("price","area","bedrooms","bathrooms","airconditioning","furnishingstatus")
+    .withColumn("price_per_area",col("price")/col("area")))
+
+result.show(10)
+#Save as Parquet
+result.write.mode("overwrite").parquet("housing_output")
+print("Saved as parquet")
+#Read it Back
+housing_parquet = spark.read.parquet("housing_output")
+housing_parquet.show()
+#Stop Spark
+spark.stop()
+print("Spark Session Stopped Successfully")
+
+PRACTICAL 6
+Question 1. Start PySpark 
+Start Docker Desktop. 
+Start the PySpark Jupyter container. 
+Open Jupyter Notebook in the browser. 
+Create a new notebook. 
+Create a SparkSession and display the Spark version. 
+
+Open docker and search for - jupyter/pyspark-notebook then run that
+after running
+optional run option will come
+write the container name and write 2nd port value
+the run in google crome as
+http://localhost(port_no.) enter
+it will open token or password- paste from the container link afte token=()
+it will open jupyter
+#step5
+#Start PySpark and display the Spark version
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, avg, count
+
+spark = SparkSession.builder \
+    .appName("Housing price analysis") \
+    .getOrCreate()
+
+print("Spark session created successfully!")
+print("Spark version:", spark.version)
+
+Question 2. Extract Data 
+Load Housing.csv into a PySpark DataFrame. 
+Load Housing_details.csv into a PySpark DataFrame. 
+Display the first 5 records of both datasets. 
+Display the DataFrame schema for both datasets. 
+#
+import os
+print("Current folder:", os.getcwd())
+print("Files available:", os.listdir())
+
+# Extract data
+price_df = spark.read.csv("Housing.csv", header=True, inferSchema=True)
+details_df = spark.read.csv("Housing_details.csv", header=True, inferSchema=True)
+
+print("Housing.csv")
+price_df.show()
+
+print("Housing_details.csv")
+details_df.show()
+
+print("First 5 records of both datasets")
+price_df.show(5)
+details_df.show(5)
+
+print("Schemas")
+price_df.printSchema()
+details_df.printSchema()
+
+Question 3. Transform the Data 
+Remove duplicate records from both datasets. 
+Handle missing values. 
+Create a price_per_area column in the Housing Price dataset. 
+Create a price_category column. 
+Display the transformed data. 
+#
+from pyspark.sql.functions import col, avg, count, round, when, upper, trim
+# 1. Remove duplicates
+price_clean = price_df.dropDuplicates()
+details_clean = details_df.dropDuplicates()
+
+# 2. Handle missing values
+price_clean = price_clean.dropna(subset=["price","area"])
+
+for column_name in details_clean.columns:
+    details_clean = details_clean.withColumn(column_name,trim(col(column_name)))
+
+# 3. Create price_per_area
+price_clean = price_clean.withColumn("price_per_area",round(col("price")/col("area"),2))
+
+# 4. Create price_category
+price_clean = price_clean.withColumn("price category",when(col("price")>=10000000,"High")
+                                     .when(col("price")>=5000000,"Medium")
+                                     .otherwise("Low"))
+
+# 5. Display the transformed data
+print("Transformed price data")
+price_clean.show()
+
+print("Transformed details data")
+details_clean.show()
+
+Question 4. Perform Spark SQL Analysis and Load Data 
+Create temporary SQL views for the processed datasets. 
+Find the average house price based on furnishingstatus. 
+Analyze houses based on price_category. 
+Save the processed datasets in Parquet format. 
+Verify the saved output.
+
+#Create temporary SQL views
+price_clean.createOrReplaceTempView("housing_prices")
+details_clean.createOrReplaceTempView("housing_details")
+
+#Average price by furnishing status
+price_analysis = spark.sql("""
+    SELECT 
+        furnishingstatus,COUNT(*) AS number_of_houses,
+        ROUND(AVG(price),2) AS average_price
+    from housing_prices
+    GROUP BY furnishingstatus
+    ORDER BY average_price desc
+""")
+
+price_analysis.show()
+
+#Analysis by price category
+category_analysis = spark.sql("""
+    SELECT 
+        'price category', COUNT(*) AS number_of_houses,
+        ROUND(AVG(price),2) AS average_price,
+        ROUND(AVG(price_per_area),2) AS average_price_per_area
+    FROM housing_prices
+    GROUP BY 'price category'
+    ORDER BY average_price DESC
+""")
+
+category_analysis.show()
+
+# 4. Save the processed datasets
+price_clean.write.mode("overwrite").parquet("housing_prices")
+price_analysis.write.mode("overwrite").option("header", True).csv("price_analysis")
+details_clean.write.mode("overwrite").parquet("housing_details")
+print("Datasets saved")
+
+# 5. Verify the saved output
+output_df = spark.read.parquet("housing_prices")
+print("Verifying saved Parquet output")
+output_df.show(5)
+
+PRACTICAL 7
+Question 1 Start the Environment 
+Start Docker Desktop. 
+Start the PySpark Jupyter container. 
+Open Jupyter Notebook in the browser. 
+Create a new notebook. 
+Create a SparkSession and display the Spark version. 
+#
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import (col,round,when,lit)
+
+import requests
+import json
+import os
+
+spark = SparkSession.builder\
+    .appName("ELT_World_Bank")\
+    .getOrCreate()
+print("Spark Version:",spark.version)
+
+
+RAW_PATH = "/home/jovyan/work/data/raw"
+CURATED_PATH = "/home/jovyan/work/data/curated"
+
+os.makedirs(RAW_PATH, exist_ok = True)
+os.makedirs(CURATED_PATH, exist_ok = True)
+
+Question 2. Extract and Load API Data 
+Using the provided World Bank API: 
+Extract Population data for India. 
+Extract GDP data for India. 
+Extract Unemployment data for India. 
+Save the extracted responses as raw JSON files. 
+Verify the raw data files. 
+#
+
+RAW_PATH = "/home/jovyan/work/data/raw"
+CURATED_PATH = "/home/jovyan/work/data/curated"
+
+os.makedirs(RAW_PATH, exist_ok = True)
+os.makedirs(CURATED_PATH, exist_ok = True)
+
+BASE_URL = "https://api.worldbank.org/v2/country/IND/indicator"
+indicators = {
+    "population":"SP.POP.TOTL",
+    "gdp" : "NY.GDP.MKTP.CD",
+    "unemployment":"SL.UEM.TOTL.ZS"
+}
+
+#Save the extracted responses as raw JSON files. 
+# Code:
+def extract_data(indicator_code):
+    url = f"{BASE_URL}/{indicator_code}"
+
+    params = {
+        "format":"json",
+        "date":"2000-2024",
+        "per_page":100
+    }
+
+    response = requests.get(url,params=params)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print("Error:",response.status_code)
+        return None
+for name, code in indicators.items():
+    data= extract_data(code)
+    file_path=f"{RAW_PATH}/{name}.json"
+
+    with open (file_path, "w") as file:
+        json.dump(data,file)
+
+    print(f"{name}data saved successfully")
+
+#Verify the raw data files. 
+# Code:
+population_raw = spark.read.option(
+    "multiline","true"
+).json(
+    f"{RAW_PATH}/population.json"
+)
+
+gdp_raw = spark.read.option(
+    "multiline","true"
+).json(
+    f"{RAW_PATH}/gdp.json"
+)
+
+unemployment_raw = spark.read.option(
+    "multiline","true"
+).json(
+    f"{RAW_PATH}/unemployment.json"
+)
+
+Question 3. Load and Prepare the Data 
+Load the raw data using PySpark. 
+Create DataFrames for the three indicators. 
+Remove records with missing values. 
+Display the schema and sample records. 
+Create temporary SQL views.
+#
+
+print(extract_data(indicators["population"]))
+
+#
+
+def extract_data(indicator_code):
+    url = f"{BASE_URL}/{indicator_code}"
+    params = {
+        "format": "json",
+        "date": "2000:2024",
+        "per_page": 100
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=30)
+        print("Status code:", response.status_code)
+        response.raise_for_status()
+
+        data = response.json()
+
+        if not isinstance(data, list) or len(data) < 2:
+            print("Unexpected API response:", data)
+            return None
+
+        return data
+
+    except Exception as e:
+        print("API error:", e)
+        return None
+#
+
+# Load the raw JSON files
+population_raw = spark.read.option("multiline", "true").json(f"{RAW_PATH}/population.json")
+gdp_raw = spark.read.option("multiline", "true").json(f"{RAW_PATH}/gdp.json")
+unemployment_raw = spark.read.option("multiline", "true").json(f"{RAW_PATH}/unemployment.json")
+
+# Display schemas
+population_raw.printSchema()
+gdp_raw.printSchema()
+unemployment_raw.printSchema()
+
+# Convert API data into Spark DataFrames
+def get_indicator_dataframe(name, code):
+    data = extract_data(code)
+
+    if not isinstance(data, list) or len(data) < 2 or not isinstance(data[1], list):
+        raise ValueError(
+            f"Invalid World Bank API response for {name}. "
+            "Check the API response and internet connection."
+        )
+
+    records = data[1]
+    cleaned_records = []
+
+    for record in records:
+        if record.get("value") is not None:
+            cleaned_records.append({
+                "year": int(record["date"]),
+                name: float(record["value"])
+            })
+
+    if not cleaned_records:
+        raise ValueError(f"No usable records found for {name}.")
+
+    return spark.createDataFrame(cleaned_records)
+
+population_df = get_indicator_dataframe(
+    "population", indicators["population"]
+)
+gdp_df = get_indicator_dataframe(
+    "gdp", indicators["gdp"]
+)
+unemployment_df = get_indicator_dataframe(
+    "unemployment", indicators["unemployment"]
+)
+
+# Display sample records
+population_df.show(5)
+gdp_df.show(5)
+unemployment_df.show(5)
+
+# Create temporary views for SQL
+population_df.createOrReplaceTempView("population")
+gdp_df.createOrReplaceTempView("gdp")
+unemployment_df.createOrReplaceTempView("unemployment")
+
+Question 4. Transform Using Spark SQL 
+Combine the three indicators using the year column. 
+Create a gdp_per_person column. 
+Create an unemployment_category column. 
+Perform a Spark SQL analysis of the transformed data. 
+Save the curated output in Parquet format. 
+#
+
+from pyspark.sql.functions import col, round, when
+
+# Join all three DataFrames using year
+india_indicators = spark.sql("""
+    SELECT p.year, p.population, g.gdp, u.unemployment
+    FROM population p
+    INNER JOIN gdp g ON p.year = g.year
+    INNER JOIN unemployment u ON p.year = u.year
+    ORDER BY p.year
+""")
+
+india_indicators.show()
+
+# Calculate GDP per person and unemployment category
+final_df = (
+    india_indicators
+    .withColumn(
+        "gdp_per_person",
+        round(col("gdp") / col("population"), 2)
+    )
+    .withColumn(
+        "unemployment_category",
+        when(col("unemployment") >= 7, "High")
+        .when(col("unemployment") >= 4, "Medium")
+        .otherwise("Low")
+    )
+)
+
+final_df.show()
+
+# Create temporary view
+final_df.createOrReplaceTempView("india_development")
+
+# Perform analysis using SQL
+analysis_df = spark.sql("""
+    SELECT
+        year,
+        ROUND(gdp_per_person, 2) AS gdp_per_person,
+        unemployment,
+        unemployment_category
+    FROM india_development
+    ORDER BY year
+""")
+
+analysis_df.show()
+
+# Save the final data as Parquet
+final_df.write.mode("overwrite").parquet(
+    f"{CURATED_PATH}/india_development_data"
+)
+
+# Read the saved Parquet data
+output_df = spark.read.parquet(
+    f"{CURATED_PATH}/india_development_data"
+)
+
+output_df.show()
+
+# Save analysis results as CSV
+analysis_df.write.mode("overwrite") \
+    .option("header", True) \
+    .csv(f"{CURATED_PATH}/india_analysis")
+
+PRACTICAL 8
+4041
+8890
+Question 1. Start and Understand the Spark Environment 
+Create a SparkSession and display the Spark version. 
+Create an RDD containing the numbers from 1 to 20 using 4 partitions. 
+Display the number of partitions and the elements present in each partition. 
+Explain why the data is divided into partitions when working with Spark
+#
+#Create a SparkSession and display the Spark version.
+from pyspark.sql import SparkSession
+spark = SparkSession.builder\
+        .appName("ETDE_practical_8").getOrCreate()
+print("Spark Version:" ,spark.version)
+##Create an RDD containing the numbers from 1 to 20 using 4 partitions.
+numbers_rdd = spark.sparkContext.parallelize(
+    range(1,21),
+    4)
+print("Number of partitions:",numbers_rdd.getNumPartitions())
+
+#Display the number of partitions and the elements present in each partition
+print(numbers_rdd.collect())
+
+partitions = numbers_rdd.glom().collect()
+for i,partition in enumerate(partitions):
+    print("Partition",i+1,":",partition)
+Question 2. Perform RDD Operations 
+
+Using the RDD created in Question 1: 
+Create a new RDD containing the square of each number using map(). 
+Create an RDD containing only the even numbers using filter(). 
+Calculate the sum of all numbers using reduce(). 
+Create a combined RDD operation that squares the numbers, retains only the even results, and calculates their sum. 
+Record the output obtained from the above operations. 
+#
+#Create a new RDD containing the square of each number using map().
+squared_rdd = numbers_rdd.map(lambda x:x*x)
+print(squared_rdd.collect())
+
+#Create an RDD containing only the even numbers using filter().
+even_rdd = numbers_rdd.filter(lambda x: x % 2 == 0)
+print(even_rdd.collect())
+
+#Create an RDD containing only the even numbers using filter().
+total = numbers_rdd.reduce( lambda x,y:x+y)
+print("sum",total)
+
+#Create a combined RDD operation that squares the numbers, retains only the even results, and calculates their sum.
+result = (numbers_rdd
+          .map(lambda x: x * x)
+          .filter(lambda x: x%2 == 0)
+          .reduce(lambda x, y: x+y))
+print("Result:",result)
+
+#
+Question 3. Observe Distributed Processing Using Spark UI 
+Create an RDD containing the numbers from 1 to 1,000,000 using 4 partitions and perform a map(), filter(), and count() operation.  
+Display the number of partitions in the RDD. 
+Open the Spark UI and identify the Job generated by the operation. 
+Identify the number of stages and tasks displayed for the job. 
+Explain the relationship between partitions, tasks, stages, and jobs based on your observation. 
+Take a screenshot of the relevant Spark UI page and attach it with your practical submission. 
+#Create an RDD containing the numbers from 1 to 1,000,000 using 4 partitions and perform a map(), filter(), and count() operation. 
+large_rdd = spark.sparkContext.parallelize(
+    range(1,100001),
+    4)
+print("Partitions:",large_rdd.getNumPartitions())
+
+result = large_rdd.map(
+    lambda x: x*2
+).filter(
+    lambda x :x% 2 == 0
+).count()
+print("Count:",result)
+
+Question 4. Prepare Data for Spark ML 
+Using the Housing Price dataset: 
+Load Housing.csv into a Spark DataFrame. 
+Select the area and price columns and remove records containing missing values. 
+Use VectorAssembler to create a features column from the area column. 
+Split the data into 80% training data and 20% testing data. 
+
+Display the number of records in the training and testing datasets. 
+#Load Housing.csv into a Spark DataFrame.
+df = spark.read.csv("Housing.csv",header=True,inferSchema=True)
+df.show()
+
+#Select the area and price columns and remove records containing missing values.
+housing_ml = df.select("area","price").dropna()
+housing_ml.show(5)
+
+#Use VectorAssembler to create a features column from the area column.
+from pyspark.ml.feature import VectorAssembler
+assembler = VectorAssembler(
+    inputCols = ["area"],
+    outputCol = "features"
+)
+
+ml_data = assembler.transform(housing_ml)
+ml_data.select(
+    "area",
+    "features",
+    "price"
+).show(5)
+
+#Split the data into 80% training data and 20% testing data.e.	Display the number of records in the training and testing datasets
+train_data,test_data = ml_data.randomSplit([0.8,0.2],seed = 42)
+print("Training Records:",train_data.count())
+print("Testing Records:",test_data.count())
+
+#Create and train a Linear Regression model to predict house price based on area.
+from pyspark.ml.regression import LinearRegression
+
+lr = LinearRegression(
+    featuresCol = "features",
+    labelCol = "price")
+
+
+Question 5. Build and Evaluate a Linear Regression Model 
+Using the prepared Housing Price data:
+Create and train a Linear Regression model to predict house price based on area. 
+Generate predictions for the test dataset. 
+Display the actual price and predicted price for at least 10 records. 
+Calculate and record the RMSE and R² values of the model. 
+Write a short conclusion on whether area alone appears to be a useful feature for predicting house price. 
+
+#Create and train a Linear Regression model to predict house price based on area.
+from pyspark.ml.regression import LinearRegression
+
+lr = LinearRegression(
+    featuresCol = "features",
+    labelCol = "price")
+
+#
+model = lr.fit(train_data)
+print("model trained successfully!")
+
+#b.	Generate predictions for the test dataset..Display the actual price and predicted price for at least 10 records.
+
+predictions = model.transform(test_data)
+predictions.select(
+    "area",
+    "price",
+    "prediction"
+).show(10)
+
+#Calculate and record the RMSE and R² values of the model.
+print("RMSE:",model.summary.rootMeanSquaredError)
+print("R-square:",model.summary.r2)
+
+----after running this code
+open the link in new crome tab as http://localhost:4041
+
