@@ -1,0 +1,697 @@
+Practical 9 - Apache Airflow on Docker
+Steps
+1.	Open Docker Desktop and wait until it is running.
+2.	Open cmd, make sure you are in the C drive, then create and enter the project folder:
+mkdir airflow-docker
+cd airflow-docker
+3.	Download the docker-compose.yaml file from the official Airflow documentation and save it inside the airflow-docker folder.
+4.	Open Notepad and type this one line: AIRFLOW_UID=50000
+5.	Click File, then Save As. Choose the airflow-docker folder, set Save as type to All Files, type the file name .env and click Save.
+6.	In cmd (inside airflow-docker), initialize Airflow. The dags, logs and plugins folders get created automatically here:
+docker compose up airflow-init
+7.	Wait until it finishes (it ends with exit code 0). Then start Airflow in the background (the flag is -d):
+docker compose up -d
+8.	Wait until cmd shows all containers as Started.
+9.	Open Docker Desktop and click Containers in the left menu.
+10.	You will see airflow-docker in the list with a small arrow on its left. Click the arrow to expand it.
+11.	A list of containers appears (postgres, redis, scheduler, worker, triggerer and the airflow webserver / api-server). Wait until they all show Running.
+12.	Find the Airflow webserver (api-server) container and look at its Port(s) column. Click the 8080:8080 link.
+13.	Your browser opens the Airflow login page (http://localhost:8080). Log in with username airflow and password airflow.
+14.	Open VS Code, open the airflow-docker folder, and create a new file named simple_dag.py inside the dags folder.
+15.	Paste the code below into simple_dag.py and save it:
+from datetime import datetime, timedelta
+from airflow import DAG
+from airflow.operators.bash import BashOperator
+ 
+# Define default arguments for the DAG
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2026, 1, 1),
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+ 
+# Instantiate the DAG
+with DAG(
+    'my_first_simple_dag',
+    default_args=default_args,
+    description='A simple tutorial DAG',
+    schedule=None,  # Manual trigger only
+    catchup=False,
+) as dag:
+ 
+    # Task 1: Print Hello
+    task_hello = BashOperator(
+        task_id='print_hello',
+        bash_command='echo "Hello World from Airflow!"',
+    )
+ 
+    # Task 2: Print Date
+    task_date = BashOperator(
+        task_id='print_date',
+        bash_command='date',
+    )
+ 
+    # Set task dependency (task_hello runs before task_date)
+    task_hello >> task_date
+
+16.	Go back to the Airflow page in the browser and refresh it. Wait a short while and my_first_simple_dag will appear in the DAG list.
+17.	Turn the toggle of my_first_simple_dag ON (enable it).
+18.	Click the Trigger (play) button to run it manually.
+19.	Click the DAG name and open Graph View. You will see print_hello followed by print_date, both turning green (Success).
+20.	Click print_hello and open Logs: it shows Hello World from Airflow! Then click print_date and open Logs: it shows the current date.
+Short answers
+Purpose of the folders: dags holds the DAG Python files, logs stores task and scheduler logs, plugins holds custom operators and hooks.
+Why .env is needed on Windows: the compose file reads AIRFLOW_UID to set the user the containers run as. Windows has no Linux user ID, so we set it manually; otherwise Docker shows a warning and file permission problems can occur in the shared folders.
+Observation: the Docker environment started successfully, my_first_simple_dag ran with status Success, both tasks succeeded, and the logs showed the Hello World message and the date. Airflow represents a workflow as a DAG made of tasks, and dependencies (task_hello >> task_date) decide the order.
+
+
+Practical 10
+# PRACTICAL 10: SALES DATA PIPELINE IN APACHE AIRFLOW
+
+## 1. SAME AS PRACTICAL 9
+- Use the same Docker Desktop installation.
+- Use the existing airflow-docker folder.
+- Use the same Airflow startup commands.
+- Open Airflow at http://localhost:8080.
+- Login: airflow
+- Password: airflow
+- Trigger DAGs and check logs using the Airflow Web UI.
+
+## 2. WHAT IS NEW IN PRACTICAL 10?
+- Create a data folder inside dags.
+- Place sales.csv inside the data folder.
+- Create a DAG with five PythonOperator tasks.
+- Generate cleaned_sales.csv after execution.
+- Clean_data and validate_data can run independently.
+
+## 3. STEP 1: OPEN DOCKER DESKTOP
+1. Open Docker Desktop.
+2. Wait until Docker is running.
+
+## 4. STEP 2: CREATE THE DATA FOLDER
+1. Open the existing airflow-docker folder.
+2. Open the dags folder.
+3. Create a folder named data.
+4. Copy sales.csv into the data folder.
+
+Folder structure:
+
+airflow-docker
+    dags
+        data
+            sales.csv
+        sales_data_pipeline_dag.py
+
+IMPORTANT:
+The CSV file must contain lowercase column names quantity and price.
+
+## 5. STEP 3: CREATE THE PYTHON FILE
+1. Open the dags folder in VS Code.
+2. Create a new file named sales_data_pipeline_dag.py.
+3. Paste the Python code given in Section 10.
+4. Save using Ctrl + S.
+
+## 6. STEP 4: OPEN CMD AND NAVIGATE TO THE FOLDER
+
+Open Command Prompt (CMD).
+
+Run the following commands one at a time:
+
+cd ..
+cd ..
+cd airflow-docker
+
+IMPORTANT:
+These commands work only if moving up two folders takes you to the directory containing airflow-docker.
+
+Alternatively, use the actual path:
+
+cd C:\Users\YOUR_USERNAME\airflow-docker
+
+Replace YOUR_USERNAME with your Windows username and adjust the path if necessary.
+
+Check the folder contents:
+
+dir
+
+You should see the dags folder and docker-compose.yaml or docker-compose.yml.
+
+## 7. STEP 5: INITIALIZE AND START AIRFLOW
+
+Command 1: Initialize Airflow
+
+docker compose up airflow-init
+
+Wait for initialization to finish successfully.
+
+Command 2: Start Airflow containers
+
+docker compose up -d
+
+Command 3: Check container status
+
+docker compose ps
+
+The required Airflow services should be running.
+
+NOTE:
+If Airflow was already initialized in Practical 9, initialization generally does not need to be repeated. You can normally start with:
+
+docker compose up -d
+
+## 8. STEP 6: OPEN AIRFLOW
+1. Open Google Chrome.
+2. Visit http://localhost:8080.
+3. Login using:
+   Username: airflow
+   Password: airflow
+
+These are the default credentials used in Practical 9, assuming they have not changed.
+
+## 9. STEP 7: RUN THE DAG
+1. Open the DAGs page.
+2. Search for sales_data_pipeline.
+3. Enable the DAG.
+4. Click Trigger.
+5. Open Graph View or Grid View.
+6. Wait for all five tasks to finish.
+
+## 10. PYTHON CODE: sales_data_pipeline_dag.py
+
+from datetime import datetime
+import csv
+import os
+
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+
+
+# File Locations
+DATA_FOLDER = "/opt/airflow/dags/data"
+INPUT_FILE = os.path.join(DATA_FOLDER, "sales.csv")
+CLEANED_FILE = os.path.join(DATA_FOLDER, "cleaned_sales.csv")
+
+
+# Task 1: Start Pipeline
+def start_pipeline():
+    print("Sales Data Pipeline Started")
+
+
+# Task 2: Check Dataset
+def check_dataset():
+    if not os.path.exists(INPUT_FILE):
+        raise FileNotFoundError("sales.csv was not found.")
+
+    with open(INPUT_FILE, "r") as file:
+        reader = csv.DictReader(file)
+        rows = list(reader)
+
+    print("Dataset found successfully.")
+    print("Number of records:", len(rows))
+
+
+# Task 3: Clean Data
+def clean_data():
+    clean_rows = []
+
+    with open(INPUT_FILE, "r") as file:
+        reader = csv.DictReader(file)
+        fieldnames = reader.fieldnames
+
+        for row in reader:
+            if all(value.strip() != "" for value in row.values()):
+                clean_rows.append(row)
+
+    with open(CLEANED_FILE, "w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(clean_rows)
+
+    print("Data cleaning completed.")
+    print("Clean records:", len(clean_rows))
+    print("Output:", CLEANED_FILE)
+
+
+# Task 4: Validate Data
+def validate_data():
+    invalid_records = []
+
+    with open(INPUT_FILE, "r") as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            if row["quantity"] == "" or row["price"] == "":
+                continue
+
+            quantity = int(row["quantity"])
+            price = float(row["price"])
+
+            if quantity <= 0 or price <= 0:
+                invalid_records.append(row)
+
+    print("Validation completed.")
+    print("Invalid records found:", len(invalid_records))
+
+    for record in invalid_records:
+        print(record)
+
+
+# Task 5: Generate Summary
+def generate_summary():
+    total_sales = 0
+    total_records = 0
+
+    with open(CLEANED_FILE, "r") as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            quantity = int(row["quantity"])
+            price = float(row["price"])
+
+            total_sales += quantity * price
+            total_records += 1
+
+    average_sales = (
+        total_sales / total_records
+        if total_records > 0
+        else 0
+    )
+
+    print("----- SALES SUMMARY -----")
+    print("Total Records:", total_records)
+    print("Total Sales:", total_sales)
+    print("Average Sales:", average_sales)
+
+
+# DAG Definition
+with DAG(
+    dag_id="sales_data_pipeline",
+    description="Sales Data Processing Workflow",
+    start_date=datetime(2026, 1, 1),
+    schedule=None,
+    catchup=False,
+    tags=["ETDE", "Practical 10"],
+) as dag:
+
+    start_task = PythonOperator(
+        task_id="start_pipeline",
+        python_callable=start_pipeline,
+    )
+
+    check_task = PythonOperator(
+        task_id="check_dataset",
+        python_callable=check_dataset,
+    )
+
+    clean_task = PythonOperator(
+        task_id="clean_data",
+        python_callable=clean_data,
+    )
+
+    validate_task = PythonOperator(
+        task_id="validate_data",
+        python_callable=validate_data,
+    )
+
+    summary_task = PythonOperator(
+        task_id="generate_summary",
+        python_callable=generate_summary,
+    )
+
+    # Task Dependencies
+    start_task >> check_task
+    check_task >> [clean_task, validate_task]
+    [clean_task, validate_task] >> summary_task
+
+
+## 11. STEP 8: CHECK THE TASK LOGS
+
+Open each task and select the Logs tab.
+
+1. start_pipeline
+   Expected: Sales Data Pipeline Started
+
+2. check_dataset
+   Expected: Dataset found successfully.
+   Check the number of records.
+
+3. clean_data
+   Expected: Data cleaning completed.
+   Check the number of clean records and output path.
+
+4. validate_data
+   Expected: Validation completed.
+   Check the number of invalid records.
+
+5. generate_summary
+   Check Total Records, Total Sales, and Average Sales.
+
+## 12. STEP 9: VERIFY THE OUTPUT FILE
+
+Open:
+
+airflow-docker > dags > data
+
+Check that the following files are present:
+
+sales.csv
+cleaned_sales.csv
+
+Open cleaned_sales.csv and verify the cleaned records.
+
+## 13. STEP 10: STOP AIRFLOW
+
+In CMD, make sure you are inside the airflow-docker folder.
+
+Run:
+
+docker compose down
+
+This stops and removes the running containers. Your project files remain in the folder.
+
+## 14. IMPORTANT POINTS
+1. The data folder must be inside dags.
+2. The CSV columns must be named quantity and price in lowercase.
+3. clean_data removes rows containing blank values.
+4. validate_data identifies zero or negative quantity and price.
+5. Validation reports invalid records but does not remove them.
+6. generate_summary runs only after both clean_data and validate_data succeed under the default Airflow trigger rule.
+7. The generated file is cleaned_sales.csv.
+
+
+PRACTICAL 11
+Question 1. Examine the Data Assets 
+Load the four Olist datasets using Pandas. For each dataset: 
+Display the dataset name and first five records. 
+Display the number of rows and columns. 
+Display the column names. 
+Display the data types of all columns. 
+Compare the structure of the four datasets
+#
+for name, df in datasets.items():
+    print("\n" + "=" * 60)
+    print("DATASET:", name)
+    print("=" * 60)
+
+    print("\nFirst five records:")
+    display(df.head())
+
+    print("Number of rows:", df.shape[0])
+    print("Number of columns:", df.shape[1])
+
+    print("\nColumn names:")
+    print(df.columns.tolist())
+
+    print("\nData types:")
+    print(df.dtypes)
+structure_comparison = []
+
+for name, df in datasets.items():
+    structure_comparison.append({
+        "Dataset": name,
+        "Rows": df.shape[0],
+        "Columns": df.shape[1],
+        "Column Names": ", ".join(df.columns.tolist())
+    })
+
+structure_df = pd.DataFrame(structure_comparison)
+
+display(structure_df)
+
+Question 2. Create a Technical Metadata Catalog 
+Create a metadata catalog for the four datasets containing: 
+Dataset name and file name. 
+File format and source location. 
+Number of records and number of columns. 
+Column names. 
+Date on which the dataset was catalogued. 
+Convert the generated metadata into a Pandas DataFrame and display the catalog. 
+#
+catalog_date = datetime.now().strftime("%Y-%m-%d")
+
+metadata = []
+
+for name, df in datasets.items():
+    filename = dataset_files[name]
+    filepath = os.path.abspath(
+        os.path.join(DATA_FOLDER, filename)
+    )
+
+    metadata.append({
+        "dataset_name": name,
+        "file_name": filename,
+        "file_format": "CSV",
+        "source_location": filepath,
+        "record_count": df.shape[0],
+        "column_count": df.shape[1],
+        "column_names": df.columns.tolist(),
+        "catalogued_date": catalog_date
+    })
+
+metadata_catalog = pd.DataFrame(metadata)
+
+print("Technical Metadata Catalog")
+display(metadata_catalog)
+
+Question 3. Add Business and Column-Level Metadata 
+Enhance the metadata catalog by adding suitable business information for each dataset. 
+Assign a business domain to each dataset. 
+Assign a suitable owner. 
+Classify each dataset as Internal or Sensitive. 
+Add appropriate tags and a short description. 
+Create a separate column-level catalog containing the dataset name, column name, data type, number of null values, and number of unique values
+#
+business_metadata = {
+    "Customers": {
+        "business_domain": "Customer Management",
+        "owner": "Customer Team",
+        "classification": "Sensitive",
+        "tags": ["customer", "profile", "identity"],
+        "description": "Contains customer identifiers and location information."
+    },
+    "Orders": {
+        "business_domain": "Sales",
+        "owner": "Sales Team",
+        "classification": "Sensitive",
+        "tags": ["sales", "orders", "customer"],
+        "description": "Contains order status, customer references and order timestamps."
+    },
+    "Products": {
+        "business_domain": "Product Management",
+        "owner": "Product Team",
+        "classification": "Internal",
+        "tags": ["products", "inventory", "sales"],
+        "description": "Contains product identifiers, category details and physical attributes."
+    },
+    "Payments": {
+        "business_domain": "Finance",
+        "owner": "Finance Team",
+        "classification": "Sensitive",
+        "tags": ["payments", "finance", "sales"],
+        "description": "Contains payment methods, payment values and installment information."
+    }
+}
+
+metadata_catalog["business_domain"] = ""
+metadata_catalog["owner"] = ""
+metadata_catalog["classification"] = ""
+
+metadata_catalog["tags"] = pd.Series(
+    [None] * len(metadata_catalog),
+    index=metadata_catalog.index,
+    dtype="object"
+)
+
+metadata_catalog["description"] = ""
+
+for index, row in metadata_catalog.iterrows():
+    name = row["dataset_name"]
+
+    for key, value in business_metadata[name].items():
+        metadata_catalog.at[index, key] = value
+
+print("Enhanced Metadata Catalog")
+display(metadata_catalog)
+
+column_metadata = []
+
+for name, df in datasets.items():
+    for column in df.columns:
+        column_metadata.append({
+            "dataset_name": name,
+            "column_name": column,
+            "data_type": str(df[column].dtype),
+            "null_values": int(df[column].isnull().sum()),
+            "unique_values": int(df[column].nunique(dropna=True))
+        })
+
+column_catalog = pd.DataFrame(column_metadata)
+
+print("Column-Level Metadata Catalog")
+display(column_catalog)
+
+print("Total columns catalogued:", len(column_catalog))
+
+Question 4. Search and Explore the Metadata Catalog 
+Perform metadata discovery operations on the completed catalog. 
+Search for datasets belonging to the Sales domain. 
+Display all datasets classified as Sensitive. 
+Search the catalog using a specified tag such as customer or sales. 
+Search for datasets belonging to a specified owner. 
+Using the column-level catalog, identify all columns containing the word customer. 
+Create a reusable function that allows the catalog to be searched using a column name and search value. 
+#
+def search_catalog(catalog, column_name, search_value):
+
+    if column_name not in catalog.columns:
+        print("Column not found:", column_name)
+        return pd.DataFrame()
+
+    search_value = str(search_value).lower()
+
+    def matches(value):
+        if isinstance(value, list):
+            return any(
+                search_value in str(item).lower()
+                for item in value
+            )
+
+        if pd.isna(value):
+            return False
+
+        return search_value in str(value).lower()
+
+    result = catalog[
+        catalog[column_name].apply(matches)
+    ]
+
+    return result
+
+print("Metadata search function created successfully!")
+#
+print("(a) Datasets belonging to Sales domain:")
+
+display(
+    search_catalog(
+        metadata_catalog,
+        "business_domain",
+        "Sales"
+    )
+)
+#
+print("(b) Datasets classified as Sensitive:")
+
+display(
+    search_catalog(
+        metadata_catalog,
+        "classification",
+        "Sensitive"
+    )
+)
+#
+print("(c) Datasets with the customer tag:")
+
+display(
+    search_catalog(
+        metadata_catalog,
+        "tags",
+        "customer"
+    )
+)
+#
+specified_owner = "Sales Team"
+
+print("(d) Datasets owned by", specified_owner, ":")
+
+display(
+    search_catalog(
+        metadata_catalog,
+        "owner",
+        specified_owner
+    )
+)
+#
+print("(e) Columns containing the word customer:")
+
+display(
+    search_catalog(
+        column_catalog,
+        "column_name",
+        "customer"
+    )
+)
+
+
+Question 5. Store and Update the Metadata Catalog 
+Perform the following catalog management operations: 
+Save the completed metadata catalog as metadata_catalog.json. 
+Read the saved JSON catalog and display it as a DataFrame. 
+Update the owner of the Products dataset. 
+Modify the description of the Products dataset and display the updated metadata entry. 
+Save the updated metadata catalog and state how metadata catalogs help users discover and understand available data assets
+
+#
+metadata_catalog.to_json(
+    "metadata_catalog.json",
+    orient="records",
+    indent=4
+)
+
+print("Metadata catalog saved successfully as metadata_catalog.json")
+print("File location:", os.path.abspath("metadata_catalog.json"))
+#
+loaded_catalog = pd.read_json("metadata_catalog.json")
+
+print("Metadata Catalog Read from JSON:")
+
+display(loaded_catalog)
+
+#
+loaded_catalog.loc[
+    loaded_catalog["dataset_name"] == "Products",
+    "owner"
+] = "Data Governance Team"
+
+print("Owner of Products dataset updated successfully!")
+
+display(
+    loaded_catalog[
+        loaded_catalog["dataset_name"] == "Products"
+    ]
+)
+
+#
+loaded_catalog.loc[
+    loaded_catalog["dataset_name"] == "Products",
+    "description"
+] = (
+    "Contains product identifiers, category details and physical "
+    "attributes for product analysis and business reporting."
+)
+
+print("Updated metadata entry for Products:")
+
+display(
+    loaded_catalog[
+        loaded_catalog["dataset_name"] == "Products"
+    ]
+)
+#
+loaded_catalog.to_json(
+    "metadata_catalog.json",
+    orient="records",
+    indent=4
+)
+
+print("Updated metadata catalog saved successfully!")
+
+verified_catalog = pd.read_json("metadata_catalog.json")
+
+display(
+    verified_catalog[
+        verified_catalog["dataset_name"] == "Products"
+    ]
+)
+
