@@ -1,0 +1,450 @@
+PRACTICAL 1
+QUESTION 1
+CREATE TABLE Book1 (
+    Book_ID NUMBER PRIMARY KEY,
+    Title VARCHAR2(100),
+    Author VARCHAR2(100),
+    Price NUMBER(10,2)
+);
+CREATE TABLE Member1 (
+    Member_ID NUMBER PRIMARY KEY,
+    Name VARCHAR2(100),
+    Department VARCHAR2(50)
+);
+INSERT INTO Book1 VALUES
+(1, 'Database Systems', 'Navathe', 750);
+
+INSERT INTO Book1 VALUES
+(2, 'SQL Fundamentals', 'Navathe', 650);
+
+INSERT INTO Member1 VALUES
+(101, 'Amit', 'Computer Science');
+
+INSERT INTO Member1 VALUES
+(102, 'Priya', 'Data Science');
+
+SELECT * FROM Book1;
+SELECT * FROM Member1;
+
+SELECT * FROM Book1
+WHERE Author = 'Navathe';
+
+SELECT * FROM Book1
+WHERE Price < 800;
+
+SELECT Author, COUNT(*) AS Total_Books
+FROM Book1
+GROUP BY Author;
+
+CREATE TABLE Borrowing1 (
+    Member_ID NUMBER REFERENCES Member1(Member_ID),
+    Book_ID NUMBER REFERENCES Book1(Book_ID),
+    Issue_Date DATE,
+    Return_Date DATE,
+    PRIMARY KEY (Member_ID, Book_ID, Issue_Date)
+);
+
+INSERT INTO Borrowing1 VALUES
+(101, 1, DATE '2026-10-01', NULL);
+
+INSERT INTO Borrowing1 VALUES
+(101, 2, DATE '2026-10-02', NULL);
+
+SELECT b.Title
+FROM Book1 b
+JOIN Borrowing1 br
+ON b.Book_ID = br.Book_ID
+WHERE br.Member_ID = 101
+AND br.Return_Date IS NULL;
+
+SELECT m.Member_ID, m.Name,
+       COUNT(*) AS Borrow_Count
+FROM Member1 m
+JOIN Borrowing1 br
+ON m.Member_ID = br.Member_ID
+GROUP BY m.Member_ID, m.Name
+HAVING COUNT(*) > 1;
+
+UPDATE Book1
+SET Price = 850
+WHERE Book_ID = 1;
+SELECT * FROM Book1
+WHERE Book_ID = 1;
+
+QUESTION 12
+
+CREATE TABLE Student (
+    Student_ID NUMBER PRIMARY KEY,
+    Name VARCHAR2(100),
+    Department VARCHAR2(50)
+);
+
+CREATE TABLE Course (
+    Course_ID NUMBER PRIMARY KEY,
+    Course_Name VARCHAR2(100),
+    Credits NUMBER
+);
+
+
+INSERT INTO Student VALUES (1, 'Amit', 'Data Science');
+INSERT INTO Student VALUES (2, 'Priya', 'Computer Science');
+INSERT INTO Student VALUES (3, 'Rahul', 'Data Science');
+
+INSERT INTO Course VALUES (101, 'ADBMS', 4);
+INSERT INTO Course VALUES (102, 'Python', 3);
+INSERT INTO Course VALUES (103, 'Cloud Computing', 4);
+
+SELECT * FROM Student;
+SELECT * FROM Course;
+
+SELECT * FROM Student WHERE Department = 'Data Science';
+
+
+SELECT * FROM Course WHERE Credits >= 4;
+SELECT * FROM Course ORDER BY Credits ASC;
+
+CREATE TABLE Registration (
+    Student_ID NUMBER REFERENCES Student(Student_ID),
+    Course_ID NUMBER REFERENCES Course(Course_ID),
+    PRIMARY KEY (Student_ID, Course_ID)
+);
+
+SELECT s.Name, c.Course_Name
+FROM Student s
+JOIN Registration r ON s.Student_ID = r.Student_ID
+JOIN Course c ON r.Course_ID = c.Course_ID;
+
+SELECT c.Course_Name, COUNT(r.Student_ID) AS Total
+FROM Course c
+LEFT JOIN Registration r ON c.Course_ID = r.Course_ID
+GROUP BY c.Course_ID, c.Course_Name;
+
+
+PRACTICAL 2
+QUESTION 1
+
+
+CREATE TABLE Patient (
+    Patient_ID NUMBER PRIMARY KEY,
+    Patient_Name VARCHAR2(100),
+    Age NUMBER,
+    Branch VARCHAR2(50)
+);
+
+INSERT INTO Patient VALUES
+(1, 'Amit', 25, 'Thane');
+
+INSERT INTO Patient VALUES
+(2, 'Priya', 30, 'Nashik');
+
+INSERT INTO Patient VALUES
+(3, 'Rahul', 35, 'Thane');
+
+INSERT INTO Patient VALUES
+(4, 'Sneha', 28, 'Nashik');
+
+SELECT * FROM Patient;
+
+SELECT * FROM Patient
+WHERE Branch = 'Thane';
+
+CREATE TABLE Patient_Replica AS
+SELECT * FROM Patient WHERE 1 = 0;
+
+INSERT INTO Patient_Replica
+SELECT * FROM Patient
+WHERE Branch = 'Thane';
+
+SELECT Branch, COUNT(*) AS Total_Patients
+FROM Patient
+GROUP BY Branch;
+
+SELECT * FROM Patient
+WHERE Patient_ID NOT IN (
+    SELECT Patient_ID FROM Patient_Replica
+);
+
+CREATE TABLE Branch (
+    Branch_ID NUMBER PRIMARY KEY,
+    Branch_Name VARCHAR2(50)
+);
+
+INSERT INTO Branch VALUES (1, 'Thane');
+INSERT INTO Branch VALUES (2, 'Nashik');
+
+UPDATE Patient
+SET Branch = 'Nashik'
+WHERE Patient_ID = 1;
+SELECT * FROM Patient WHERE Patient_ID = 1;
+
+INSERT INTO Patient_Replica
+SELECT * FROM Patient p
+WHERE p.Branch = 'Nashik'
+AND NOT EXISTS (
+    SELECT 1 FROM Patient_Replica r
+    WHERE r.Patient_ID = p.Patient_ID
+);
+
+SELECT Patient_ID FROM Patient
+INTERSECT
+SELECT Patient_ID FROM Patient_Replica;
+
+QUESTION 13
+
+
+CREATE TABLE Student1 (
+    Student_ID NUMBER PRIMARY KEY,
+    Name VARCHAR2(100),
+    Department VARCHAR2(50),
+    Campus VARCHAR2(50)
+);
+
+INSERT INTO Student1 VALUES (1, 'Amit', 'IT', 'Andheri');
+INSERT INTO Student1 VALUES (2, 'Priya', 'Data Science', 'Vashi');
+INSERT INTO Student1 VALUES (3, 'Rahul', 'IT', 'Vashi');
+INSERT INTO Student1 VALUES (4, 'Sneha', 'Computer Science', 'Andheri');
+
+CREATE TABLE Student_Report AS
+SELECT * FROM Student1 WHERE 1 = 0;
+
+INSERT INTO Student_Report
+SELECT * FROM Student1 WHERE Campus1 = 'Andheri';
+SELECT Campus, Department, COUNT(*) AS Total
+FROM Student GROUP BY Campus1, Department;
+
+SELECT * FROM Student
+WHERE Student_ID NOT IN (
+    SELECT Student_ID FROM Student_Report
+);
+SELECT * FROM Student_Report
+ORDER BY Campus1, Student_ID;
+
+CREATE TABLE Campus1 (
+    Campus_ID NUMBER PRIMARY KEY,
+    Campus_Name VARCHAR2(50)
+);
+
+INSERT INTO Campus1 VALUES (1, 'Andheri');
+INSERT INTO Campus1 VALUES (2, 'Vashi');
+
+INSERT INTO Student_Report
+SELECT * FROM Student s
+WHERE s.Department = 'IT'
+AND NOT EXISTS (
+    SELECT 1 FROM Student_Report r
+    WHERE r.Student_ID = s.Student_ID
+);
+
+SELECT s.Student_ID,
+       s.Name AS Original_Name,
+       r.Name AS Report_Name
+FROM Student1 s
+JOIN Student_Report r
+ON s.Student_ID = r.Student_ID
+WHERE s.Name <> r.Name;
+
+SELECT 'Original' AS Table_Name, COUNT(*) AS Total
+FROM Student
+UNION ALL
+SELECT 'Reporting', COUNT(*)
+FROM Student_Report;
+
+
+PRACTICAL 3
+QUESTION 3
+
+use CollegeDB
+db.createCollection("students")
+
+db.students.insertMany([
+  { roll_no: 101, name: "Amit", department: "Data Science", marks: 85, city: "Mumbai" },
+  { roll_no: 102, name: "Priya", department: "IT", marks: 92, city: "Thane" },
+  { roll_no: 103, name: "Rahul", department: "Data Science", marks: 78, city: "Mumbai" },
+  { roll_no: 104, name: "Sneha", department: "CS", marks: 88, city: "Nashik" },
+  { roll_no: 105, name: "Rohini", department: "IT", marks: 70, city: "Pune" }
+])
+db.students.find({Department: "Computer Science"})
+
+db.students.updateOne(
+  {Student_ID: 1},
+  {$set: {Semester: 4}}
+)
+
+db.students.find({Student_ID: 1})
+
+db.students.find().sort({Name: -1})
+
+db.students.find({Semester: {$gt: 2}})
+
+db.students.aggregate([
+  {$group: {_id: "$Department", count: {$sum: 1}}}
+])
+
+db.students.deleteOne({Student_ID: 2})
+
+
+db.students.find({City: "Mumbai"})
+
+Question 14
+
+use LearningDB
+db.createCollection("learners")
+
+
+db.learners.insertMany([
+  {Student_ID: 1, Name: "Asha", Courses: [
+    {Course_Name: "Python", Marks: 82},
+    {Course_Name: "SQL", Marks: 78}
+  ]},
+  {Student_ID: 2, Name: "Ravi", Courses: [
+    {Course_Name: "Python", Marks: 70}
+  ]},
+  {Student_ID: 3, Name: "Meera", Courses: [
+    {Course_Name: "Python", Marks: 91},
+    {Course_Name: "MongoDB", Marks: 86}
+  ]}
+])
+
+db.learners.find({"Courses.Course_Name": "Python"})
+
+db.learners.updateOne(
+  {Student_ID: 1, "Courses.Course_Name": "Python"},
+  {$set: {"Courses.$.Marks": 88}}
+)
+
+db.learners.find({Student_ID: 1})
+
+db.learners.find({
+  Courses: {$elemMatch: {Course_Name: "Python", Marks: {$gt: 75}}}
+})
+
+db.learners.find({
+  $expr: {$gt: [{$size: "$Courses"}, 1]}
+})
+
+db.learners.find({"Courses.Marks": {$gt: 80}})
+
+db.learners.updateOne(
+  {Student_ID: 2},
+  {$push: {Courses: {Course_Name: "MongoDB", Marks: 84}}}
+)
+
+db.learners.countDocuments({})
+
+PRACTICAL 4
+QUESTION 4
+
+CREATE TYPE Address_Type AS OBJECT (
+  Street VARCHAR2(80),
+  City   VARCHAR2(50)
+);
+/
+
+CREATE TYPE Patient_Type AS OBJECT (
+  Patient_ID NUMBER,
+  Patient_Name VARCHAR2(60),
+  Age NUMBER,
+  Address Address_Type
+);
+/
+
+CREATE TABLE Patients OF Patient_Type (
+  PRIMARY KEY (Patient_ID)
+);
+
+
+INSERT INTO Patients VALUES (
+  Patient_Type(1, 'Asha', 28, Address_Type('Hill Road', 'Mumbai'))
+);
+INSERT INTO Patients VALUES (
+  Patient_Type(2, 'Ravi', 35, Address_Type('MG Road', 'Thane'))
+);
+
+SELECT p.Patient_Name, p.Address.City AS City
+FROM Patients p;
+
+SELECT p.Patient_ID, p.Age
+FROM Patients p;
+
+SELECT p.Patient_Name, p.Address.Street, p.Address.City
+FROM Patients p;
+
+INSERT INTO Patients VALUES (
+  Patient_Type(3, 'Meera', 40, Address_Type('FC Road', 'Pune'))
+);
+
+SELECT VALUE(p)
+FROM Patients p;
+
+UPDATE Patients p
+SET p.Address.City = 'Nashik'
+WHERE p.Patient_ID = 2;
+
+SELECT COUNT(*) AS Patient_Count
+FROM Patients;
+
+
+QUESTION 15
+QUESTION 15
+CREATE TYPE Faculty_Type AS OBJECT (
+  Faculty_ID NUMBER,
+  Name VARCHAR2(60),
+  Specialization VARCHAR2(80)
+);
+/
+
+
+CREATE TABLE Faculty OF Faculty_Type (
+  PRIMARY KEY (Faculty_ID)
+);
+
+INSERT INTO Faculty VALUES (Faculty_Type(1, 'Prof. Mehta', 'Database Management'));
+INSERT INTO Faculty VALUES (Faculty_Type(2, 'Prof. Rao', 'Networks'));
+INSERT INTO Faculty VALUES (Faculty_Type(3, 'Prof. Shah', 'AI'));
+
+SELECT f.Name, f.Specialization
+FROM Faculty f;
+
+
+INSERT INTO Faculty VALUES (
+  Faculty_Type(4, 'Prof. Iyer', 'Data Science')
+);
+
+
+SELECT COUNT(*) AS Faculty_Count
+FROM Faculty;
+
+-- Type alteration/recreation can depend on Oracle object dependencies.
+-- Conceptual target type:
+CREATE TYPE Faculty_Type_New AS OBJECT (
+  Faculty_ID NUMBER,
+  Name VARCHAR2(60),
+  Specialization VARCHAR2(80),
+  Department VARCHAR2(60)
+);
+/
+
+SELECT f.Name, f.Specialization
+FROM Faculty f
+WHERE f.Specialization = 'Database Management';
+
+UPDATE Faculty f
+SET f.Specialization = 'Advanced DBMS'
+WHERE f.Faculty_ID = 1;
+
+SELECT VALUE(f)
+FROM Faculty f
+ORDER BY f.Faculty_ID ASC;
+
+
+
+
+
+
+
+
+
+
+
+
+
