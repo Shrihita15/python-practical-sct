@@ -1,0 +1,1156 @@
+PRACTICAL 5
+QUESTION 5
+CODE thst shouldbe entered in left side
+
+% Q5.1 - Facts for four students
+student(s01, rohini, d02).
+student(s02, amit, d01).
+student(s03, sneha, d03).
+student(s04, rahul, d02).
+
+% Q5.2 - Department facts
+department(d01, computer_science).
+department(d02, information_technology).
+department(d03, data_science).
+department(d04, electronics).
+
+% Q5.5 - Information Technology students
+it_student(Name) :-
+    student(_, Name, D),
+    department(D, information_technology).
+
+% Q5.6 - Data Science or Information Technology students
+ds_or_it(Name) :-
+    student(_, Name, d03).
+ds_or_it(Name) :-
+    student(_, Name, d02).
+
+% Q5.7 - Student ID facts
+student_id(rohini, s01).
+student_id(amit, s02).
+student_id(sneha, s03).
+student_id(rahul, s04).
+
+% Q5.8 - Students not in Data Science
+not_data_science(ID, Name, D) :-
+    student(ID, Name, D),
+    D \= d03.
+
+% Q5.9 - Students in the same department
+same_department(X, Y) :-
+    student(_, X, D),
+    student(_, Y, D),
+    X \= Y.
+
+% Q5.10 - Students with a defined department
+student_with_department(ID, Name, D, DeptName) :-
+    student(ID, Name, D),
+    department(D, DeptName).
+
+now code that should be in right box
+student(ID, Name, Department).
+student(ID, Name, d03).
+it_student(Name).
+ds_or_it(Name).
+student_id(rohini, ID).
+not_data_science(ID, Name, D).
+same_department(X, Y).
+student_with_department(ID, Name, D, DeptName).
+
+
+Question 16
+left side
+
+% Q16.1 - Facts for four subjects
+subject(sub01, database_systems).
+subject(sub02, data_structures).
+subject(sub03, machine_learning).
+subject(sub04, web_technology).
+
+% Q16.2 - Instructor facts
+instructor(i01, prof_mehta).
+instructor(i02, prof_sharma).
+
+% Teaching assignments
+teaches(i01, sub01).
+teaches(i01, sub04).
+teaches(i02, sub02).
+teaches(i02, sub03).
+
+% Q16.3 - Derive instructor-subject relationships
+instructor_subject(InstructorName, SubjectName) :-
+    instructor(IID, InstructorName),
+    teaches(IID, SID),
+    subject(SID, SubjectName).
+
+% Q16.8 - Instructors teaching more than one subject
+multi_subject_instructor(InstructorName) :-
+    instructor(IID, InstructorName),
+    teaches(IID, S1),
+    teaches(IID, S2),
+    S1 @< S2.
+
+% Q16.9 - Instructors who teach at least one subject
+teaching_instructor(Name) :-
+    instructor(IID, Name),
+    teaches(IID, _).
+
+% Q16.7 - Subject and department facts
+subject_department(sub01, information_technology).
+subject_department(sub02, computer_science).
+subject_department(sub03, data_science).
+subject_department(sub04, information_technology).
+
+right side
+instructor_subject(Instructor, Subject).
+instructor_subject(Instructor, database_systems).
+instructor_subject(prof_mehta, Subject).
+subject_department(sub01, Dept).
+multi_subject_instructor(Name).
+teaching_instructor(Name).
+instructor_subject(Instructor, database_systems).
+
+
+PRACTICAL 6
+QUESTION 6
+CREATE TABLE Sales (
+    Sale_ID NUMBER PRIMARY KEY,
+    Product_Name VARCHAR2(50),
+    Quantity NUMBER,
+    Amount NUMBER(10,2)
+);
+
+INSERT INTO Sales VALUES (1, 'Laptop', 2, 80000);
+INSERT INTO Sales VALUES (2, 'Mouse', 5, 2500);
+INSERT INTO Sales VALUES (3, 'Keyboard', 3, 4500);
+INSERT INTO Sales VALUES (4, 'Laptop', 1, 40000);
+
+SELECT SUM(Amount) AS Total_Sales FROM Sales;
+
+SELECT Product_Name, SUM(Quantity) AS Total_Qty
+FROM Sales GROUP BY Product_Name;
+
+
+SELECT Product_Name, SUM(Quantity) AS Total_Qty
+FROM Sales
+GROUP BY Product_Name
+HAVING SUM(Quantity) = (
+    SELECT MIN(Total_Qty)
+    FROM (
+        SELECT SUM(Quantity) AS Total_Qty
+        FROM Sales GROUP BY Product_Name
+    )
+);
+
+SELECT Product_Name, SUM(Amount) AS Total_Sales
+FROM Sales
+GROUP BY Product_Name
+HAVING SUM(Amount) > 7500;
+
+SELECT Product_Name, SUM(Amount) AS Total_Sales
+FROM Sales
+GROUP BY Product_Name
+ORDER BY Total_Sales DESC;
+
+
+SELECT Product_Name, AVG(Amount) AS Avg_Sales
+FROM Sales GROUP BY Product_Name;
+
+Q6.8. Display the product with the highest total sales amount.
+
+SELECT Product_Name, SUM(Amount) AS Total_Sales
+FROM Sales
+GROUP BY Product_Name
+HAVING SUM(Amount) = (
+    SELECT MAX(Total_Sales)
+    FROM (
+        SELECT SUM(Amount) AS Total_Sales
+        FROM Sales GROUP BY Product_Name
+    )
+);
+
+SELECT Product_Name, COUNT(*) AS Transactions
+FROM Sales GROUP BY Product_Name;
+
+SELECT * FROM Sales
+WHERE Amount > (SELECT AVG(Amount) FROM Sales);
+
+QUESTION 17
+CREATE TABLE Sales (
+    Sale_ID NUMBER PRIMARY KEY,
+    Department VARCHAR2(50),
+    Product_Name VARCHAR2(50),
+    Amount NUMBER(10,2)
+);
+
+INSERT INTO Sales VALUES (1, 'Electronics', 'Laptop', 45000);
+INSERT INTO Sales VALUES (2, 'Clothing', 'Shirt', 3000);
+INSERT INTO Sales VALUES (3, 'Electronics', 'Mouse', 6000);
+INSERT INTO Sales VALUES (4, 'Clothing', 'Jeans', 12000);
+
+SELECT Department, SUM(Amount) AS Total_Sales
+FROM Sales GROUP BY Department;
+
+SELECT Department, SUM(Amount) AS Total_Sales
+FROM Sales
+GROUP BY Department
+HAVING SUM(Amount) = (
+    SELECT MIN(Total_Sales)
+    FROM (
+        SELECT SUM(Amount) AS Total_Sales
+        FROM Sales GROUP BY Department
+    )
+);
+
+SELECT Product_Name, SUM(Amount) AS Total_Sales
+FROM Sales
+GROUP BY Product_Name
+ORDER BY Total_Sales DESC;
+
+
+SELECT Department, SUM(Amount) AS Total_Sales
+FROM Sales
+GROUP BY Department
+HAVING SUM(Amount) > 15000;
+
+SELECT Department, COUNT(*) AS Total_Records
+FROM Sales GROUP BY Department;
+
+SELECT Department, AVG(Amount) AS Average_Sales
+FROM Sales GROUP BY Department;
+
+SELECT Department, SUM(Amount) AS Total_Sales
+FROM Sales
+GROUP BY Department
+HAVING SUM(Amount) = (
+    SELECT MAX(Total_Sales)
+    FROM (
+        SELECT SUM(Amount) AS Total_Sales
+        FROM Sales GROUP BY Department
+    )
+);
+
+
+SELECT Product_Name, SUM(Amount) AS Total_Sales
+FROM Sales
+GROUP BY Product_Name
+HAVING SUM(Amount) > 5000;
+
+SELECT Department,
+       ROUND(
+           100 * SUM(Amount) /
+           (SELECT SUM(Amount) FROM Sales), 2
+       ) AS Percentage
+FROM Sales
+GROUP BY Department;
+
+PRACTICAL 7
+QUESTION 7
+
+# PRACTICAL 7 — XML AND XQUERY
+# Website: https://fiddle.basex.org/
+# Instructions:
+# 1. Open BaseX Fiddle in your browser.
+# 2. Copy the code for ONE question from this file.
+# 3. Paste it into the editor.
+# 4. Click Run/Execute if available.
+# 5. Repeat for the next question.
+
+==================================================
+Q7.1 — CREATE XML DOCUMENT CONTAINING FOUR PRODUCTS
+==================================================
+
+<products>
+  <product>
+    <Product_ID>1</Product_ID>
+    <Name>Laptop</Name>
+    <Category>Electronics</Category>
+    <Price>45000</Price>
+  </product>
+  <product>
+    <Product_ID>2</Product_ID>
+    <Name>Shirt</Name>
+    <Category>Clothing</Category>
+    <Price>1200</Price>
+  </product>
+  <product>
+    <Product_ID>3</Product_ID>
+    <Name>Mouse</Name>
+    <Category>Electronics</Category>
+    <Price>700</Price>
+  </product>
+  <product>
+    <Product_ID>4</Product_ID>
+    <Name>Jeans</Name>
+    <Category>Clothing</Category>
+    <Price>2500</Price>
+  </product>
+</products>
+
+
+==================================================
+Q7.2 — DISPLAY ALL PRODUCT NAMES
+==================================================
+
+let $data :=
+<products>
+  <product><Name>Laptop</Name></product>
+  <product><Name>Shirt</Name></product>
+  <product><Name>Mouse</Name></product>
+  <product><Name>Jeans</Name></product>
+</products>
+
+for $p in $data/product
+return $p/Name
+
+
+==================================================
+Q7.3 — RETRIEVE PRODUCTS IN CLOTHING CATEGORY
+==================================================
+
+let $data :=
+<products>
+  <product><Name>Laptop</Name><Category>Electronics</Category></product>
+  <product><Name>Shirt</Name><Category>Clothing</Category></product>
+  <product><Name>Mouse</Name><Category>Electronics</Category></product>
+  <product><Name>Jeans</Name><Category>Clothing</Category></product>
+</products>
+
+for $p in $data/product[Category = "Clothing"]
+return $p/Name
+
+
+==================================================
+Q7.4 — PRODUCTS COSTING LESS THAN 8000
+==================================================
+
+let $data :=
+<products>
+  <product><Name>Laptop</Name><Price>45000</Price></product>
+  <product><Name>Shirt</Name><Price>1200</Price></product>
+  <product><Name>Mouse</Name><Price>700</Price></product>
+  <product><Name>Jeans</Name><Price>2500</Price></product>
+</products>
+
+for $p in $data/product
+where xs:decimal($p/Price) lt 8000
+return $p/Name
+
+
+==================================================
+Q7.5 — DISPLAY PRODUCTS IN DESCENDING PRICE ORDER
+==================================================
+
+let $data :=
+<products>
+  <product><Name>Laptop</Name><Price>45000</Price></product>
+  <product><Name>Shirt</Name><Price>1200</Price></product>
+  <product><Name>Mouse</Name><Price>700</Price></product>
+  <product><Name>Jeans</Name><Price>2500</Price></product>
+</products>
+
+for $p in $data/product
+order by xs:decimal($p/Price) descending
+return
+  <result>
+    {$p/Name}
+    {$p/Price}
+  </result>
+
+
+==================================================
+Q7.6 — COUNT ELECTRONICS PRODUCTS
+==================================================
+
+let $data :=
+<products>
+  <product><Category>Electronics</Category></product>
+  <product><Category>Clothing</Category></product>
+  <product><Category>Electronics</Category></product>
+  <product><Category>Clothing</Category></product>
+</products>
+
+return count($data/product[Category = "Electronics"])
+
+
+==================================================
+Q7.7 — PRODUCTS PRICED BETWEEN 1000 AND 5000
+==================================================
+
+let $data :=
+<products>
+  <product><Name>Laptop</Name><Price>45000</Price></product>
+  <product><Name>Shirt</Name><Price>1200</Price></product>
+  <product><Name>Mouse</Name><Price>700</Price></product>
+  <product><Name>Jeans</Name><Price>2500</Price></product>
+</products>
+
+for $p in $data/product
+where xs:decimal($p/Price) ge 1000
+  and xs:decimal($p/Price) le 5000
+return $p/Name
+
+
+==================================================
+Q7.8 — DISPLAY NAMES FOR A SPECIFIED CATEGORY
+==================================================
+
+let $data :=
+<products>
+  <product><Name>Laptop</Name><Category>Electronics</Category></product>
+  <product><Name>Shirt</Name><Category>Clothing</Category></product>
+  <product><Name>Mouse</Name><Category>Electronics</Category></product>
+  <product><Name>Jeans</Name><Category>Clothing</Category></product>
+</products>
+
+let $category := "Clothing"
+
+for $p in $data/product
+where $p/Category = $category
+return $p/Name
+
+# To display Electronics products, change "Clothing" to "Electronics".
+
+
+==================================================
+Q7.9 — CALCULATE AVERAGE PRICE
+==================================================
+
+let $data :=
+<products>
+  <product><Price>45000</Price></product>
+  <product><Price>1200</Price></product>
+  <product><Price>700</Price></product>
+  <product><Price>2500</Price></product>
+</products>
+
+return avg(
+  for $p in $data/product
+  return xs:decimal($p/Price)
+)
+
+# Expected result: 12350
+
+
+==================================================
+Q7.10 — DETAILS OF THE MOST EXPENSIVE PRODUCT
+==================================================
+
+let $data :=
+<products>
+  <product>
+    <Product_ID>1</Product_ID>
+    <Name>Laptop</Name>
+    <Category>Electronics</Category>
+    <Price>45000</Price>
+  </product>
+  <product>
+    <Product_ID>2</Product_ID>
+    <Name>Shirt</Name>
+    <Category>Clothing</Category>
+    <Price>1200</Price>
+  </product>
+  <product>
+    <Product_ID>3</Product_ID>
+    <Name>Mouse</Name>
+    <Category>Electronics</Category>
+    <Price>700</Price>
+  </product>
+  <product>
+    <Product_ID>4</Product_ID>
+    <Name>Jeans</Name>
+    <Category>Clothing</Category>
+    <Price>2500</Price>
+  </product>
+</products>
+
+let $highest := max(
+  for $p in $data/product
+  return xs:decimal($p/Price)
+)
+
+return $data/product[xs:decimal(Price) = $highest]
+
+# Expected result:
+# Product_ID: 1
+# Name: Laptop
+# Category: Electronics
+# Price: 45000
+
+
+QUESTION 18
+# ADBMS PRACTICAL – Q.18
+## XML Subject Catalogue using XQuery
+### Website: https://fiddle.basex.org/
+
+==================================================
+Q1. CREATE AN XML DOCUMENT CONTAINING FOUR SUBJECTS
+==================================================
+
+<subjects>
+  <subject>
+    <Subject_ID>1</Subject_ID>
+    <Subject_Name>ADBMS</Subject_Name>
+    <Department>Computer Science</Department>
+    <Credits>4</Credits>
+  </subject>
+  <subject>
+    <Subject_ID>2</Subject_ID>
+    <Subject_Name>Python</Subject_Name>
+    <Department>Data Science</Department>
+    <Credits>3</Credits>
+  </subject>
+  <subject>
+    <Subject_ID>3</Subject_ID>
+    <Subject_Name>Cloud Computing</Subject_Name>
+    <Department>Computer Science</Department>
+    <Credits>5</Credits>
+  </subject>
+  <subject>
+    <Subject_ID>4</Subject_ID>
+    <Subject_Name>Machine Learning</Subject_Name>
+    <Department>Data Science</Department>
+    <Credits>4</Credits>
+  </subject>
+</subjects>
+
+==================================================
+Q2. DISPLAY ALL SUBJECT NAMES
+==================================================
+
+let $data :=
+<subjects>
+  <subject><Subject_Name>ADBMS</Subject_Name></subject>
+  <subject><Subject_Name>Python</Subject_Name></subject>
+  <subject><Subject_Name>Cloud Computing</Subject_Name></subject>
+  <subject><Subject_Name>Machine Learning</Subject_Name></subject>
+</subjects>
+
+return $data/subject/Subject_Name
+
+EXPECTED OUTPUT:
+ADBMS
+Python
+Cloud Computing
+Machine Learning
+
+==================================================
+Q3. RETRIEVE SUBJECTS OFFERED BY COMPUTER SCIENCE
+==================================================
+
+let $data :=
+<subjects>
+  <subject><Subject_Name>ADBMS</Subject_Name><Department>Computer Science</Department></subject>
+  <subject><Subject_Name>Python</Subject_Name><Department>Data Science</Department></subject>
+  <subject><Subject_Name>Cloud Computing</Subject_Name><Department>Computer Science</Department></subject>
+  <subject><Subject_Name>Machine Learning</Subject_Name><Department>Data Science</Department></subject>
+</subjects>
+
+return $data/subject[Department = "Computer Science"]
+
+EXPECTED OUTPUT:
+ADBMS — Computer Science
+Cloud Computing — Computer Science
+
+==================================================
+Q4. SORT SUBJECTS BY CREDITS IN DESCENDING ORDER
+==================================================
+
+let $data :=
+<subjects>
+  <subject><Subject_Name>ADBMS</Subject_Name><Credits>4</Credits></subject>
+  <subject><Subject_Name>Python</Subject_Name><Credits>3</Credits></subject>
+  <subject><Subject_Name>Cloud Computing</Subject_Name><Credits>5</Credits></subject>
+  <subject><Subject_Name>Machine Learning</Subject_Name><Credits>4</Credits></subject>
+</subjects>
+
+for $s in $data/subject
+order by xs:integer($s/Credits) descending
+return $s
+
+EXPECTED ORDER:
+Cloud Computing — 5 credits
+ADBMS — 4 credits
+Machine Learning — 4 credits
+Python — 3 credits
+
+==================================================
+Q5. DISPLAY SUBJECTS HAVING FEWER THAN 4 CREDITS
+==================================================
+
+let $data :=
+<subjects>
+  <subject><Subject_Name>ADBMS</Subject_Name><Credits>4</Credits></subject>
+  <subject><Subject_Name>Python</Subject_Name><Credits>3</Credits></subject>
+  <subject><Subject_Name>Cloud Computing</Subject_Name><Credits>5</Credits></subject>
+  <subject><Subject_Name>Machine Learning</Subject_Name><Credits>4</Credits></subject>
+</subjects>
+
+return $data/subject[xs:integer(Credits) lt 4]
+
+EXPECTED OUTPUT:
+Python — 3 credits
+
+==================================================
+Q6. COUNT SUBJECTS OFFERED BY DATA SCIENCE
+==================================================
+
+let $data :=
+<subjects>
+  <subject><Department>Computer Science</Department></subject>
+  <subject><Department>Data Science</Department></subject>
+  <subject><Department>Computer Science</Department></subject>
+  <subject><Department>Data Science</Department></subject>
+</subjects>
+
+return count($data/subject[Department = "Data Science"])
+
+EXPECTED OUTPUT:
+2
+
+==================================================
+Q7. RETRIEVE SUBJECTS WITH CREDITS BETWEEN 3 AND 5
+==================================================
+
+let $data :=
+<subjects>
+  <subject><Subject_Name>ADBMS</Subject_Name><Credits>4</Credits></subject>
+  <subject><Subject_Name>Python</Subject_Name><Credits>3</Credits></subject>
+  <subject><Subject_Name>Cloud Computing</Subject_Name><Credits>5</Credits></subject>
+  <subject><Subject_Name>Machine Learning</Subject_Name><Credits>4</Credits></subject>
+</subjects>
+
+return $data/subject[
+  xs:integer(Credits) ge 3
+  and xs:integer(Credits) le 5
+]
+
+EXPECTED OUTPUT:
+ADBMS — 4 credits
+Python — 3 credits
+Cloud Computing — 5 credits
+Machine Learning — 4 credits
+
+==================================================
+Q8. DISPLAY SUBJECT NAMES FROM A SPECIFIED DEPARTMENT
+==================================================
+
+let $data :=
+<subjects>
+  <subject><Subject_Name>ADBMS</Subject_Name><Department>Computer Science</Department></subject>
+  <subject><Subject_Name>Python</Subject_Name><Department>Data Science</Department></subject>
+  <subject><Subject_Name>Cloud Computing</Subject_Name><Department>Computer Science</Department></subject>
+  <subject><Subject_Name>Machine Learning</Subject_Name><Department>Data Science</Department></subject>
+</subjects>
+
+let $dept := "Data Science"
+
+for $s in $data/subject
+where $s/Department = $dept
+return $s/Subject_Name
+
+EXPECTED OUTPUT:
+Python
+Machine Learning
+
+NOTE:
+To display Computer Science subjects instead, change
+let $dept := "Data Science"
+to
+let $dept := "Computer Science"
+
+==================================================
+Q9. CALCULATE THE AVERAGE CREDIT VALUE
+==================================================
+
+let $data :=
+<subjects>
+  <subject><Credits>4</Credits></subject>
+  <subject><Credits>3</Credits></subject>
+  <subject><Credits>5</Credits></subject>
+  <subject><Credits>4</Credits></subject>
+</subjects>
+
+return avg(
+  for $s in $data/subject
+  return xs:integer($s/Credits)
+)
+
+EXPECTED OUTPUT:
+4
+
+==================================================
+Q10. RETURN THE SUBJECT WITH MAXIMUM CREDITS
+==================================================
+
+let $data :=
+<subjects>
+  <subject><Subject_ID>1</Subject_ID><Subject_Name>ADBMS</Subject_Name><Department>Computer Science</Department><Credits>4</Credits></subject>
+  <subject><Subject_ID>2</Subject_ID><Subject_Name>Python</Subject_Name><Department>Data Science</Department><Credits>3</Credits></subject>
+  <subject><Subject_ID>3</Subject_ID><Subject_Name>Cloud Computing</Subject_Name><Department>Computer Science</Department><Credits>5</Credits></subject>
+  <subject><Subject_ID>4</Subject_ID><Subject_Name>Machine Learning</Subject_Name><Department>Data Science</Department><Credits>4</Credits></subject>
+</subjects>
+
+let $highest := max(
+  for $s in $data/subject
+  return xs:integer($s/Credits)
+)
+
+return $data/subject[xs:integer(Credits) = $highest]
+
+EXPECTED OUTPUT:
+Cloud Computing — 5 credits
+
+
+PRACTICAL 8
+QUESTION 8
+
+# ADBMS PRACTICAL – Q8
+## University Campus Locations
+### Software: Oracle 10g
+
+==================================================
+Q8.1. CREATE A CAMPUS_PLACE TABLE
+==================================================
+
+CREATE TABLE Campus_Place (
+    Place_ID NUMBER PRIMARY KEY,
+    Place_Name VARCHAR2(100),
+    Location MDSYS.SDO_GEOMETRY
+);
+
+PURPOSE:
+Creates a table to store campus place names and their spatial coordinates.
+
+==================================================
+Q8.2. INSERT THREE POINT LOCATIONS
+==================================================
+
+INSERT INTO Campus_Place VALUES (
+    1,
+    'Administration',
+    MDSYS.SDO_GEOMETRY(
+        2001,
+        NULL,
+        MDSYS.SDO_POINT_TYPE(0, 0, NULL),
+        NULL,
+        NULL
+    )
+);
+
+INSERT INTO Campus_Place VALUES (
+    2,
+    'Cafeteria',
+    MDSYS.SDO_GEOMETRY(
+        2001,
+        NULL,
+        MDSYS.SDO_POINT_TYPE(200, 100, NULL),
+        NULL,
+        NULL
+    )
+);
+
+INSERT INTO Campus_Place VALUES (
+    3,
+    'Sports Complex',
+    MDSYS.SDO_GEOMETRY(
+        2001,
+        NULL,
+        MDSYS.SDO_POINT_TYPE(800, 500, NULL),
+        NULL,
+        NULL
+    )
+);
+
+COMMIT;
+
+PURPOSE:
+Stores the coordinates of the three campus locations.
+
+==================================================
+Q8.3. DISPLAY X AND Y COORDINATES
+==================================================
+
+SELECT
+    c.Place_Name,
+    c.Location.SDO_POINT.X AS X,
+    c.Location.SDO_POINT.Y AS Y
+FROM Campus_Place c;
+
+EXPECTED OUTPUT:
+
+Place_Name          X       Y
+Administration      0       0
+Cafeteria           200     100
+Sports Complex      800     500
+
+==================================================
+Q8.4. DISTANCE BETWEEN ADMINISTRATION AND CAFETERIA
+==================================================
+
+SELECT
+    SDO_GEOM.SDO_DISTANCE(
+        a.Location,
+        b.Location,
+        0.005
+    ) AS Distance_Metres
+FROM Campus_Place a,
+     Campus_Place b
+WHERE a.Place_ID = 1
+AND b.Place_ID = 2;
+
+EXPECTED DISTANCE:
+Approximately 223.61 coordinate units.
+
+FORMULA:
+Distance = SQRT((200 - 0)^2 + (100 - 0)^2)
+
+==================================================
+Q8.5. FIND PLACES WITHIN 300 METRES OF ADMINISTRATION
+==================================================
+
+SELECT p.Place_Name
+FROM Campus_Place p,
+     Campus_Place a
+WHERE a.Place_ID = 1
+AND p.Place_ID <> a.Place_ID
+AND SDO_WITHIN_DISTANCE(
+    p.Location,
+    a.Location,
+    'distance=300'
+) = 'TRUE';
+
+EXPECTED OUTPUT:
+Cafeteria
+
+NOTE:
+The spatial metadata and spatial index should be configured before running this spatial query.
+
+==================================================
+Q8.6. DISTANCE BETWEEN CAFETERIA AND SPORTS COMPLEX
+==================================================
+
+SELECT
+    SDO_GEOM.SDO_DISTANCE(
+        a.Location,
+        b.Location,
+        0.005
+    ) AS Distance_Metres
+FROM Campus_Place a,
+     Campus_Place b
+WHERE a.Place_ID = 2
+AND b.Place_ID = 3;
+
+EXPECTED DISTANCE:
+Approximately 721.11 coordinate units.
+
+FORMULA:
+Distance = SQRT((800 - 200)^2 + (500 - 100)^2)
+
+==================================================
+Q8.7. POPULATE USER_SDO_GEOM_METADATA
+==================================================
+
+INSERT INTO USER_SDO_GEOM_METADATA (
+    TABLE_NAME,
+    COLUMN_NAME,
+    DIMINFO,
+    SRID
+)
+VALUES (
+    'CAMPUS_PLACE',
+    'LOCATION',
+    MDSYS.SDO_DIM_ARRAY(
+        MDSYS.SDO_DIM_ELEMENT(
+            'X', -1000, 2000, 0.005
+        ),
+        MDSYS.SDO_DIM_ELEMENT(
+            'Y', -1000, 2000, 0.005
+        )
+    ),
+    NULL
+);
+
+COMMIT;
+
+PURPOSE:
+Defines the coordinate dimensions, valid coordinate ranges, and tolerance for the spatial column.
+
+==================================================
+Q8.8. CREATE A SPATIAL INDEX
+==================================================
+
+CREATE INDEX campus_spatial_idx
+ON Campus_Place(Location)
+INDEXTYPE IS MDSYS.SPATIAL_INDEX;
+
+PURPOSE:
+Creates an index to improve spatial query performance.
+
+==================================================
+Q8.9. FIND THE NEAREST PLACE TO THE SPORTS COMPLEX
+==================================================
+
+SELECT Place_Name, Distance_Metres
+FROM (
+    SELECT
+        p.Place_Name,
+        SDO_GEOM.SDO_DISTANCE(
+            p.Location,
+            s.Location,
+            0.005
+        ) AS Distance_Metres
+    FROM Campus_Place p,
+         Campus_Place s
+    WHERE s.Place_ID = 3
+    AND p.Place_ID <> 3
+    ORDER BY Distance_Metres
+)
+WHERE ROWNUM = 1;
+
+EXPECTED OUTPUT:
+Cafeteria — approximately 721.11 coordinate units.
+
+==================================================
+Q8.10. FIND PLACES WITHIN 1,000 METRES OF CAFETERIA
+==================================================
+
+SELECT p.Place_Name
+FROM Campus_Place p,
+     Campus_Place c
+WHERE c.Place_ID = 2
+AND p.Place_ID <> c.Place_ID
+AND SDO_WITHIN_DISTANCE(
+    p.Location,
+    c.Location,
+    'distance=1000'
+) = 'TRUE';
+
+EXPECTED OUTPUT:
+Administration
+Sports Complex
+
+QUESTION 19
+
+# ADBMS PRACTICAL – QUESTION 19
+## Healthcare Clinic Locations
+### Software: Oracle 10g
+
+==================================================
+Q19.1. CREATE A CLINIC TABLE
+==================================================
+
+CREATE TABLE Clinic (
+    Clinic_ID NUMBER PRIMARY KEY,
+    Clinic_Name VARCHAR2(100),
+    Location MDSYS.SDO_GEOMETRY
+);
+
+PURPOSE:
+Creates a table to store clinic names and their spatial coordinates.
+
+==================================================
+Q19.2. INSERT THREE CLINIC LOCATIONS
+==================================================
+
+INSERT INTO Clinic VALUES (
+    1,
+    'Clinic A',
+    MDSYS.SDO_GEOMETRY(
+        2001,
+        NULL,
+        MDSYS.SDO_POINT_TYPE(0, 0, NULL),
+        NULL,
+        NULL
+    )
+);
+
+INSERT INTO Clinic VALUES (
+    2,
+    'Clinic B',
+    MDSYS.SDO_GEOMETRY(
+        2001,
+        NULL,
+        MDSYS.SDO_POINT_TYPE(3000, 1000, NULL),
+        NULL,
+        NULL
+    )
+);
+
+INSERT INTO Clinic VALUES (
+    3,
+    'Clinic C',
+    MDSYS.SDO_GEOMETRY(
+        2001,
+        NULL,
+        MDSYS.SDO_POINT_TYPE(8000, 4000, NULL),
+        NULL,
+        NULL
+    )
+);
+
+COMMIT;
+
+PURPOSE:
+Stores the coordinates of Clinic A, Clinic B, and Clinic C.
+
+==================================================
+Q19.3. DISPLAY X AND Y COORDINATES
+==================================================
+
+SELECT
+    c.Clinic_Name,
+    c.Location.SDO_POINT.X AS X,
+    c.Location.SDO_POINT.Y AS Y
+FROM Clinic c;
+
+EXPECTED OUTPUT:
+
+Clinic_Name     X       Y
+Clinic A        0       0
+Clinic B        3000    1000
+Clinic C        8000    4000
+
+==================================================
+Q19.4. CALCULATE DISTANCE BETWEEN CLINIC A AND B
+==================================================
+
+SELECT
+    SDO_GEOM.SDO_DISTANCE(
+        a.Location,
+        b.Location,
+        0.005
+    ) AS Distance_Metres
+FROM Clinic a,
+     Clinic b
+WHERE a.Clinic_ID = 1
+AND b.Clinic_ID = 2;
+
+EXPECTED DISTANCE:
+Approximately 3162.28 coordinate units.
+
+FORMULA:
+Distance = SQRT((3000 - 0)^2 + (1000 - 0)^2)
+
+==================================================
+Q19.5. FIND CLINICS WITHIN 5000 METRES OF CLINIC A
+==================================================
+
+SELECT c.Clinic_Name
+FROM Clinic c,
+     Clinic a
+WHERE a.Clinic_ID = 1
+AND c.Clinic_ID <> a.Clinic_ID
+AND SDO_WITHIN_DISTANCE(
+    c.Location,
+    a.Location,
+    'distance=5000'
+) = 'TRUE';
+
+EXPECTED OUTPUT:
+Clinic B
+
+==================================================
+Q19.6. CALCULATE DISTANCE BETWEEN CLINIC B AND C
+==================================================
+
+SELECT
+    SDO_GEOM.SDO_DISTANCE(
+        b.Location,
+        c.Location,
+        0.005
+    ) AS Distance_Metres
+FROM Clinic b,
+     Clinic c
+WHERE b.Clinic_ID = 2
+AND c.Clinic_ID = 3;
+
+EXPECTED DISTANCE:
+Approximately 5830.95 coordinate units.
+
+FORMULA:
+Distance = SQRT((8000 - 3000)^2 + (4000 - 1000)^2)
+
+==================================================
+Q19.7. CREATE SPATIAL METADATA FOR CLINIC
+==================================================
+
+INSERT INTO USER_SDO_GEOM_METADATA (
+    TABLE_NAME,
+    COLUMN_NAME,
+    DIMINFO,
+    SRID
+)
+VALUES (
+    'CLINIC',
+    'LOCATION',
+    MDSYS.SDO_DIM_ARRAY(
+        MDSYS.SDO_DIM_ELEMENT(
+            'X', -1000, 10000, 0.005
+        ),
+        MDSYS.SDO_DIM_ELEMENT(
+            'Y', -1000, 10000, 0.005
+        )
+    ),
+    NULL
+);
+
+COMMIT;
+
+PURPOSE:
+Registers the coordinate dimensions, valid ranges, and tolerance for the spatial column.
+
+==================================================
+Q19.8. CREATE A SPATIAL INDEX
+==================================================
+
+CREATE INDEX clinic_spatial_idx
+ON Clinic(Location)
+INDEXTYPE IS MDSYS.SPATIAL_INDEX;
+
+PURPOSE:
+Creates a spatial index to help Oracle process spatial queries efficiently.
+
+==================================================
+Q19.9. FIND THE NEAREST CLINIC TO CLINIC C
+==================================================
+
+SELECT Clinic_Name, Distance_Metres
+FROM (
+    SELECT
+        c.Clinic_Name,
+        SDO_GEOM.SDO_DISTANCE(
+            c.Location,
+            x.Location,
+            0.005
+        ) AS Distance_Metres
+    FROM Clinic c,
+         Clinic x
+    WHERE x.Clinic_ID = 3
+    AND c.Clinic_ID <> 3
+    ORDER BY Distance_Metres
+)
+WHERE ROWNUM = 1;
+
+EXPECTED OUTPUT:
+Clinic B — approximately 5830.95 coordinate units.
+
+==================================================
+Q19.10. FIND CLINICS WITHIN 10000 METRES OF CLINIC B
+==================================================
+
+SELECT c.Clinic_Name
+FROM Clinic c,
+     Clinic b
+WHERE b.Clinic_ID = 2
+AND c.Clinic_ID <> b.Clinic_ID
+AND SDO_WITHIN_DISTANCE(
+    c.Location,
+    b.Location,
+    'distance=10000'
+) = 'TRUE';
+
+EXPECTED OUTPUT:
+Clinic A
+Clinic C
+
