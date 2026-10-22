@@ -1,0 +1,637 @@
+# =====================================================================
+
+%pip install cryptography
+import json
+import hashlib
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.exceptions import InvalidSignature
+
+
+# ---------------------------------------------------------------------
+# Common function used in both questions (same as your worksheet)
+# ---------------------------------------------------------------------
+def calculate_hash(data):
+    return hashlib.sha256(data.encode("utf-8")).hexdigest()
+
+
+# =====================================================================
+# QUESTION 9 - ATTENDANCE RECORD: HASHING AND PUBLIC-KEY CRYPTOGRAPHY
+# =====================================================================
+print("=" * 70)
+print("QUESTION 9")
+print("=" * 70)
+
+# Q9.1 Create a Python dictionary with student name and attendance percentage
+record = {"name": "Amit Sharma", "attendance": 85}
+print("\nQ9.1 Record:", record)
+
+# Q9.2 Generate SHA-256 hash of the record
+# (dictionary -> string first; sort_keys=True keeps the key order fixed)
+record_string = json.dumps(record, sort_keys=True)
+hash1 = calculate_hash(record_string)
+print("\nQ9.2 SHA-256 hash of the record:")
+print(hash1)
+
+# Q9.3 Change the attendance percentage and generate a second hash
+record["attendance"] = 60
+record_string = json.dumps(record, sort_keys=True)
+hash2 = calculate_hash(record_string)
+print("\nQ9.3 Modified record:", record)
+print("Second hash:")
+print(hash2)
+
+# Q9.4 Compare the hashes and display whether the record changed
+print("\nQ9.4 Comparison:")
+if hash1 == hash2:
+    print("Record has NOT changed.")
+else:
+    print("Record HAS changed (hashes are different).")
+
+
+# Q9.5 Generate RSA key pair, encrypt and decrypt a short record
+private_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=2048
+)
+public_key = private_key.public_key()
+
+print("\nQ9.5 RSA keys generated")
+print("Key Size:", private_key.key_size, "bits")
+
+short_record = "Amit Sharma|85"
+
+encrypted = public_key.encrypt(
+    short_record.encode("utf-8"),
+    padding.OAEP(
+        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+        algorithm=hashes.SHA256(),
+        label=None
+    )
+)
+
+print("\nOriginal Record :", short_record)
+print("Encrypted Record:", encrypted)
+
+decrypted = private_key.decrypt(
+    encrypted,
+    padding.OAEP(
+        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+        algorithm=hashes.SHA256(),
+        label=None
+    )
+).decode("utf-8")
+
+print("Decrypted Record:", decrypted)
+if decrypted == short_record:
+    print("Verification: original and decrypted records match.")
+
+# Q9.6 Verify whether a record matches its saved SHA-256 hash
+saved_hash = hash1                                   # hash saved earlier (attendance = 85)
+original_record = {"name": "Amit Sharma", "attendance": 85}
+print("\nQ9.6 Verify record against saved hash:")
+if calculate_hash(json.dumps(original_record, sort_keys=True)) == saved_hash:
+    print("Record matches the saved hash - data is authentic.")
+else:
+    print("Record does NOT match the saved hash - data was modified.")
+
+print("Modified record (attendance = 60):")
+if calculate_hash(json.dumps(record, sort_keys=True)) == saved_hash:
+    print("Record matches the saved hash - data is authentic.")
+else:
+    print("Record does NOT match the saved hash - data was modified.")
+
+# Q9.7 Python function that accepts a record and returns its SHA-256 hash
+def hash_record(rec):
+    return calculate_hash(json.dumps(rec, sort_keys=True))
+
+
+print("\nQ9.7 hash_record() output:")
+print(hash_record({"name": "Amit Sharma", "attendance": 85}))
+
+# Q9.8 Save original hash, change the student NAME, compare
+original = {"name": "Amit Sharma", "attendance": 85}
+original_hash = hash_record(original)
+
+name_changed = {"name": "Amit Kumar", "attendance": 85}
+new_hash = hash_record(name_changed)
+
+print("\nQ9.8 Name changed:")
+print("Original hash:", original_hash)
+print("New hash     :", new_hash)
+if original_hash != new_hash:
+    print("Hashes are different - change in student name detected.")
+else:
+    print("Hashes are the same - no change.")
+
+# Q9.9 Sign a short message with the private key, verify with the public key
+message = b"Attendance of Amit Sharma is 85"
+
+signature = private_key.sign(
+    message,
+    padding.PSS(
+        mgf=padding.MGF1(hashes.SHA256()),
+        salt_length=padding.PSS.MAX_LENGTH
+    ),
+    hashes.SHA256()
+)
+
+print("\nQ9.9 Digital signature created.")
+print("Signature (first 40 bytes):", signature[:40])
+
+try:
+    public_key.verify(
+        signature,
+        message,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    print("Signature is VALID - message is authentic.")
+except InvalidSignature:
+    print("Signature is INVALID.")
+
+# tampered message
+try:
+    public_key.verify(
+        signature,
+        b"Attendance of Amit Sharma is 99",
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    print("Tampered message: signature VALID")
+except InvalidSignature:
+    print("Tampered message: signature is INVALID - message was changed.")
+
+# Q9.10 Difference between hashing and encryption
+print("""
+Q9.10 Hashing vs Encryption:
+- Hashing is ONE-WAY: the original data can NOT be recovered from the hash.
+  It is used to check integrity (has the data changed?).
+- Encryption is TWO-WAY: the original data CAN be recovered by decrypting with
+  the correct key (private key in RSA). It is used for confidentiality.
+""")
+
+
+# =====================================================================
+# QUESTION 20 - EXAM RESULTS: MERKLE TREE
+# =====================================================================
+print("=" * 70)
+print("QUESTION 20")
+print("=" * 70)
+
+
+# Merkle root function (same logic as your worksheet; if a level has an odd
+# number of hashes the last one is repeated, so any number of records works)
+def merkle_root(hash_list):
+    hash_list = hash_list.copy()
+
+    while len(hash_list) > 1:
+        if len(hash_list) % 2 == 1:
+            hash_list.append(hash_list[-1])
+
+        new_level = []
+        for i in range(0, len(hash_list), 2):
+            combined = hash_list[i] + hash_list[i + 1]
+            new_level.append(calculate_hash(combined))
+
+        hash_list = new_level
+
+    return hash_list[0]
+
+
+# Build the full tree (list of levels) - same as your worksheet Q9
+def build_merkle_tree(hash_list):
+    current_level = hash_list.copy()
+    tree = [current_level]
+
+    while len(current_level) > 1:
+        if len(current_level) % 2 == 1:
+            current_level = current_level + [current_level[-1]]
+
+        new_level = []
+        for i in range(0, len(current_level), 2):
+            combined = current_level[i] + current_level[i + 1]
+            new_level.append(calculate_hash(combined))
+
+        tree.append(new_level)
+        current_level = new_level
+
+    return tree
+
+
+# Q20.1 Create four sample result records
+results = [
+    "RES101|Amit Sharma|DBMS|90|A",
+    "RES102|Neha Patel|DBMS|85|A",
+    "RES103|Rohan Mehta|Python|78|B+",
+    "RES104|Priya Shah|Python|92|A+"
+]
+print("\nQ20.1 Result records:")
+for r in results:
+    print(r)
+
+# Q20.2 SHA-256 hash for each record
+print("\nQ20.2 SHA-256 hashes:")
+original_hashes = []
+for r in results:
+    h = calculate_hash(r)
+    original_hashes.append(h)
+    print(r.split("|")[0], ":", h)
+
+# Q20.3 Combine the hashes to calculate the Merkle root
+original_root = merkle_root(original_hashes)
+print("\nQ20.3 Original Merkle Root:")
+print(original_root)
+
+# Q20.4 Modify one mark and recalculate the Merkle root
+modified_results = results.copy()
+modified_results[1] = "RES102|Neha Patel|DBMS|95|A+"      # marks 85 -> 95
+
+modified_hashes = [calculate_hash(r) for r in modified_results]
+modified_root = merkle_root(modified_hashes)
+
+print("\nQ20.4 Marks of RES102 changed (85 -> 95)")
+print("Modified Merkle Root:")
+print(modified_root)
+
+# Q20.5 Verify a result record against its stored hash
+stored_hash = original_hashes[1]                           # stored hash of RES102
+print("\nQ20.5 Verify record against stored hash:")
+print("Original record :", end=" ")
+print("Data is authentic." if calculate_hash(results[1]) == stored_hash
+      else "WARNING: record has been modified!")
+print("Modified record :", end=" ")
+print("Data is authentic." if calculate_hash(modified_results[1]) == stored_hash
+      else "WARNING: record has been modified!")
+
+# Q20.6 Merkle tree from EIGHT result records - display the root
+eight_results = [
+    "RES101|Amit Sharma|DBMS|90|A",
+    "RES102|Neha Patel|DBMS|85|A",
+    "RES103|Rohan Mehta|Python|78|B+",
+    "RES104|Priya Shah|Python|92|A+",
+    "RES105|Karan Joshi|DBMS|74|B",
+    "RES106|Sneha Singh|Python|88|A",
+    "RES107|Vikram Rao|DBMS|81|A",
+    "RES108|Meera Iyer|Python|69|C+"
+]
+eight_hashes = [calculate_hash(r) for r in eight_results]
+eight_root = merkle_root(eight_hashes)
+
+print("\nQ20.6 Merkle Root of 8 records:")
+print(eight_root)
+
+# Q20.7 Combine the eight leaf hashes pairwise - show intermediate levels
+tree = build_merkle_tree(eight_hashes)
+
+print("\nQ20.7 Merkle tree levels:")
+for level_number, level in enumerate(tree):
+    if level_number == 0:
+        name = "Leaf level (8 hashes)"
+    elif level_number == len(tree) - 1:
+        name = "Merkle Root"
+    else:
+        name = f"Intermediate level {level_number} ({len(level)} hashes)"
+    print(f"\nLevel {level_number} - {name}")
+    for h in level:
+        print("  ", h)
+
+# Q20.8 Change a student name WITHOUT changing marks, check record hash
+name_changed_record = "RES102|Neha Sharma|DBMS|85|A"       # marks still 85, name changed
+print("\nQ20.8 Name changed, marks unchanged:")
+print("Original hash:", calculate_hash(results[1]))
+print("New hash     :", calculate_hash(name_changed_record))
+if calculate_hash(results[1]) != calculate_hash(name_changed_record):
+    print("Record hash changed - even a name change is detected.")
+
+# Q20.9 Compare original and modified Merkle roots
+print("\nQ20.9 Original Merkle Root:", original_root)
+print("      Modified Merkle Root:", modified_root)
+if original_root == modified_root:
+    print("Examination result data is authentic.")
+else:
+    print("WARNING: Examination result data has been modified!")
+    print("The roots differ, so at least one result record was changed.")
+
+
+# Q20.10 Merkle proof - verify ONE result without checking every record
+def merkle_proof(hash_list, index):
+    """Return the sibling hashes needed to rebuild the root for hash_list[index]."""
+    proof = []
+    level = hash_list.copy()
+    while len(level) > 1:
+        if len(level) % 2 == 1:
+            level.append(level[-1])
+        sibling = index ^ 1                                 # neighbour at this level
+        proof.append((level[sibling], "left" if sibling < index else "right"))
+        level = [calculate_hash(level[i] + level[i + 1]) for i in range(0, len(level), 2)]
+        index //= 2
+    return proof
+
+
+def verify_with_proof(record, proof, root):
+    h = calculate_hash(record)
+    for sibling, side in proof:
+        h = calculate_hash(sibling + h) if side == "left" else calculate_hash(h + sibling)
+    return h == root
+
+
+proof = merkle_proof(eight_hashes, 2)                       # proof for RES103
+print("\nQ20.10 Merkle proof for RES103 uses only", len(proof), "hashes (not all 8 records).")
+print("Original RES103 verified :", verify_with_proof(eight_results[2], proof, eight_root))
+print("Tampered RES103 verified :", verify_with_proof("RES103|Rohan Mehta|Python|99|A+", proof, eight_root))
+
+print("""
+Explanation:
+A Merkle proof contains only the sibling hashes on the path from one record
+(leaf) to the root. To verify one result we hash the record, combine it with
+each sibling hash step by step, and compare the final hash with the stored
+Merkle root. If it matches, the record is authentic. For n records only about
+log2(n) hashes are needed (3 for 8 records) instead of comparing all n records.
+""")
+
+/* =====================================================================
+   QUESTION 10 - STUDENT TABLE IN CLOUD SQL DATABASE
+   ===================================================================== */
+
+-- Q10.1 Create Student table and insert four records
+CREATE TABLE Student (
+    Student_ID NUMBER PRIMARY KEY,
+    Name VARCHAR2(50),
+    Department VARCHAR2(40),
+    Semester NUMBER
+);
+
+INSERT INTO Student VALUES (1, 'Amit Sharma', 'Computer Science', 3);
+INSERT INTO Student VALUES (2, 'Neha Patel', 'Information Technology', 3);
+INSERT INTO Student VALUES (3, 'Rohan Mehta', 'Data Science', 2);
+INSERT INTO Student VALUES (4, 'Priya Shah', 'Computer Science', 4);
+
+SELECT * FROM Student;
+
+-- Q10.2 Display students in the Computer Science department
+SELECT * FROM Student WHERE Department = 'Computer Science';
+
+-- Q10.3 Display students in Semester 3
+SELECT * FROM Student WHERE Semester = 3;
+
+-- Q10.4 Count students in each department
+SELECT
+    Department,
+    COUNT(*) AS Total_Students
+FROM Student
+GROUP BY Department;
+
+-- Q10.5 Display all students in alphabetical order of Name
+SELECT * FROM Student ORDER BY Name;
+
+-- Q10.6 One benefit of accessing the database through an online SQL interface:
+-- The database can be used from any browser on any device without installing
+-- or configuring any database software, so work can be done from anywhere.
+
+-- Q10.7 Create Department table and insert at least three records
+CREATE TABLE Department (
+    Dept_ID NUMBER PRIMARY KEY,
+    Dept_Name VARCHAR2(40)
+);
+
+INSERT INTO Department VALUES (1, 'Computer Science');
+INSERT INTO Department VALUES (2, 'Information Technology');
+INSERT INTO Department VALUES (3, 'Data Science');
+
+SELECT * FROM Department;
+
+-- Q10.8 Display students from a specified city (City added to the table)
+ALTER TABLE Student ADD City VARCHAR2(30);
+
+UPDATE Student SET City = 'Mumbai' WHERE Student_ID = 1;
+UPDATE Student SET City = 'Pune' WHERE Student_ID = 2;
+UPDATE Student SET City = 'Mumbai' WHERE Student_ID = 3;
+UPDATE Student SET City = 'Nashik' WHERE Student_ID = 4;
+
+SELECT * FROM Student WHERE City = 'Mumbai';
+
+-- Q10.9 Update the semester of one student and verify the change
+UPDATE Student SET Semester = 4 WHERE Student_ID = 1;
+
+SELECT * FROM Student WHERE Student_ID = 1;
+
+-- Q10.10 One security precaution when connecting to a cloud-hosted database:
+-- Use a strong password and an encrypted (SSL/TLS) connection, and give the
+-- account only the privileges it needs. Never share the admin login.
+
+
+
+/* =====================================================================
+   QUESTION 21 - LIBRARY BOOKS IN CLOUD DATABASE
+   ===================================================================== */
+
+-- Q21.1 Create Book table and insert four records
+CREATE TABLE Book (
+    Book_ID NUMBER PRIMARY KEY,
+    Title VARCHAR2(100),
+    Author VARCHAR2(60),
+    Price NUMBER(8,2)
+);
+
+INSERT INTO Book VALUES (101, 'Database Systems', 'Raghu Ramakrishnan', 850);
+INSERT INTO Book VALUES (102, 'Python Programming', 'Mark Lutz', 700);
+INSERT INTO Book VALUES (103, 'Learning Python', 'Mark Lutz', 550);
+INSERT INTO Book VALUES (104, 'Cloud Computing', 'Rajkumar Buyya', 1200);
+
+SELECT * FROM Book;
+
+-- Q21.2 Display books costing more than 700
+SELECT * FROM Book WHERE Price > 700;
+
+-- Q21.3 Display all books in ascending order of price
+SELECT * FROM Book ORDER BY Price ASC;
+
+-- Q21.4 Count the books written by each author
+SELECT
+    Author,
+    COUNT(*) AS Total_Books
+FROM Book
+GROUP BY Author;
+
+-- Q21.5 Retrieve books written by a specified author
+SELECT * FROM Book WHERE Author = 'Mark Lutz';
+
+-- Q21.6 Display the most expensive book
+SELECT * FROM Book WHERE Price = (SELECT MAX(Price) FROM Book);
+
+-- Q21.7 Create a Category column and classify each book by category
+ALTER TABLE Book ADD Category VARCHAR2(30);
+
+UPDATE Book SET Category = 'Database' WHERE Book_ID = 101;
+UPDATE Book SET Category = 'Programming' WHERE Book_ID = 102;
+UPDATE Book SET Category = 'Programming' WHERE Book_ID = 103;
+UPDATE Book SET Category = 'Cloud' WHERE Book_ID = 104;
+
+SELECT Book_ID, Title, Category FROM Book;
+
+-- Q21.8 Display books whose price is between 500 and 1,000
+SELECT * FROM Book WHERE Price BETWEEN 500 AND 1000;
+
+-- Q21.9 Update the price of a specified book and verify the update
+UPDATE Book SET Price = 950 WHERE Book_ID = 102;
+
+SELECT * FROM Book WHERE Book_ID = 102;
+
+-- Q21.10 One advantage and one risk of storing library data in a cloud database:
+-- Advantage: the data is stored centrally and every branch can access it over
+-- the internet, with backup and scaling handled by the cloud provider.
+-- Risk: the data depends on internet connectivity and on the provider's
+-- security, so a weak password or wrong access settings can expose the data.
+
+/* =====================================================================
+   QUESTION 11 - EMPLOYEE TABLE, VIEW WITHOUT SALARY, PRIVILEGES, ROLE
+   Run as SYSTEM (same as Practical 11).
+   Test_User = the test user given by your instructor. If no user is given,
+   create one with the two lines marked below.
+   ===================================================================== */
+
+-- Q11.1 Create Employee table and insert three records
+CREATE TABLE Employee (
+    Employee_ID INT PRIMARY KEY,
+    Employee_Name VARCHAR(100),
+    Department VARCHAR(100),
+    Salary DECIMAL(10,2)
+);
+
+INSERT ALL
+    INTO Employee VALUES (1, 'Amit Sharma', 'IT', 75000)
+    INTO Employee VALUES (2, 'Neha Patel', 'HR', 55000)
+    INTO Employee VALUES (3, 'Rohan Mehta', 'IT', 65000)
+SELECT * FROM dual;
+
+SELECT * FROM Employee;
+
+-- Q11.2 Create a view that excludes Salary
+CREATE VIEW Employee_View AS
+SELECT
+    Employee_ID,
+    Employee_Name,
+    Department
+FROM Employee;
+
+-- Q11.3 Grant SELECT on the view to the test user
+-- (only if the instructor has not given you a user, create one first:)
+CREATE USER Test_User IDENTIFIED BY Test123;
+GRANT CREATE SESSION TO Test_User;
+
+GRANT SELECT ON Employee_View TO Test_User;
+
+-- Q11.4 Display employees earning more than 60,000
+SELECT * FROM Employee WHERE Salary > 60000;
+
+-- Q11.5 Revoke SELECT on the view from the test user
+REVOKE SELECT ON Employee_View FROM Test_User;
+
+-- Q11.6 Count the employees in each department
+SELECT
+    Department,
+    COUNT(*) AS Total_Employees
+FROM Employee
+GROUP BY Department;
+
+-- Q11.7 Create a role for the test user
+CREATE ROLE Employee_Role;
+
+GRANT Employee_Role TO Test_User;
+
+-- Q11.8 Grant the minimum required privilege (SELECT on the view only) to the role
+GRANT SELECT ON Employee_View TO Employee_Role;
+
+-- Q11.9 Connect as Test_User and query the base table
+SELECT * FROM SYSTEM.Employee_View;
+-- Output: Employee_ID, Employee_Name, Department are displayed
+
+SELECT * FROM SYSTEM.Employee;
+-- Expected output: ORA-00942: table or view does not exist
+-- (Test_User has no privilege on the base table, so access is denied)
+
+-- Q11.10 Why a view that omits Salary supports data confidentiality:
+-- The view shows only Employee_ID, Employee_Name and Department. The Salary
+-- column is not part of the view and the user has no privilege on the base
+-- table, so the user can never see salary information.
+
+
+
+/* =====================================================================
+   QUESTION 22 - EMPLOYEE ACCESS CONTROL
+   Run as SYSTEM. If you already did Question 11 in the same schema, first run:
+       DROP VIEW Employee_View;
+       DROP TABLE Employee;
+   (Test_User already exists from Question 11 - skip CREATE USER.)
+   ===================================================================== */
+
+-- Q22.1 Create Employee table and insert three records
+CREATE TABLE Employee (
+    Employee_ID INT PRIMARY KEY,
+    Employee_Name VARCHAR(100),
+    Department VARCHAR(100),
+    Salary DECIMAL(10,2)
+);
+
+INSERT ALL
+    INTO Employee VALUES (101, 'Rahul Verma', 'Sales', 50000)
+    INTO Employee VALUES (102, 'Priya Shah', 'Sales', 40000)
+    INTO Employee VALUES (103, 'Karan Joshi', 'HR', 60000)
+SELECT * FROM dual;
+
+SELECT * FROM Employee;
+
+-- Q22.2 Create a view that excludes the Salary column
+CREATE VIEW Employee_Public_View AS
+SELECT
+    Employee_ID,
+    Employee_Name,
+    Department
+FROM Employee;
+
+-- Q22.3 Grant SELECT on the view to the test user
+GRANT SELECT ON Employee_Public_View TO Test_User;
+
+-- Q22.4 Display employees in the Sales department earning more than 45,000
+SELECT *
+FROM Employee
+WHERE Department = 'Sales'
+AND Salary > 45000;
+
+-- Q22.5 Revoke SELECT on the view from the test user
+REVOKE SELECT ON Employee_Public_View FROM Test_User;
+
+-- Q22.6 Display the number of employees in each department
+SELECT
+    Department,
+    COUNT(*) AS Total_Employees
+FROM Employee
+GROUP BY Department;
+
+-- Q22.7 Create a role for the test user
+CREATE ROLE Employee_Public_Role;
+
+-- Q22.8 Grant SELECT on the view to the role
+GRANT SELECT ON Employee_Public_View TO Employee_Public_Role;
+
+-- A user receives the role when it is granted to that user:
+GRANT Employee_Public_Role TO Test_User;
+-- The user gets the role's privileges when connected as Test_User
+-- (a new session, or SET ROLE Employee_Public_Role;)
+
+-- Q22.9 Display employees of a specified department without revealing salary
+SELECT * FROM Employee_Public_View WHERE Department = 'Sales';
+
+-- Q22.10 Principle of least privilege:
+-- Every user gets only the minimum privileges needed for the job and nothing
+-- more. In this database the test user gets only SELECT on Employee_Public_View.
+-- The user has no access to the Employee table, no access to the Salary column
+-- and no INSERT, UPDATE or DELETE rights, so salary data stays protected even
+-- if the account is misused.
